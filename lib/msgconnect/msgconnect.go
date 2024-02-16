@@ -5,6 +5,7 @@ type MessageManager interface {
 	ID() string
 	CreateProducer(producerId, queueName string) error
 	GetProducer(producerId string) (MessageProducer, bool)
+	Consume(queueName string, handler MessageHandler) error
 	Close()
 }
 
