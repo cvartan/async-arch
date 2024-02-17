@@ -2,11 +2,13 @@ package base
 
 import (
 	msg "async-arch/lib/msgconnect"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/xlab/closer"
@@ -16,6 +18,14 @@ import (
 type serviceApplication struct {
 	messageManagers map[string]msg.MessageManager
 	httpServer      *http.Server
+	httpClients     map[string]httpRequestProducer
+}
+
+type httpRequestProducer struct {
+	serverAddr      string
+	methodURL       string
+	methodType      string
+	responseHandler func(*http.Response)
 }
 
 // RegisterMessageManager - метод регистрации нового менеджера очередей
@@ -139,6 +149,158 @@ func (app *serviceApplication) HandleFunc(methodString string, handler http.Hand
 	return nil
 }
 
+// AddGetRequest - добавление шаблон для запроса GET
+func (app *serviceApplication) AddGetRequest(requestId, serverAddr, methodUrl string, handler func(*http.Response)) error {
+	if requestId == "" {
+		return errors.New("идентификатор запроса должен быть указан")
+	}
+	if serverAddr == "" {
+		return errors.New("адрес сервера должен быть указан")
+	}
+	if methodUrl == "" {
+		return errors.New("путь к методу должэен быть указан")
+	}
+	if handler == nil {
+		return errors.New("отбработчик ответа должен быть определен")
+	}
+	if _, ok := app.httpClients[requestId]; ok {
+		return errors.New("запрос с таким идентификатором уже определен")
+	}
+	app.httpClients[requestId] = httpRequestProducer{
+		serverAddr:      serverAddr,
+		methodURL:       methodUrl,
+		methodType:      http.MethodGet,
+		responseHandler: handler,
+	}
+	return nil
+}
+
+// AddPostRequest - добавление шаблон для запроса POST
+func (app *serviceApplication) AddPostRequest(requestId, serverAddr, methodUrl string, handler func(*http.Response)) error {
+	if requestId == "" {
+		return errors.New("идентификатор запроса должен быть указан")
+	}
+	if serverAddr == "" {
+		return errors.New("адрес сервера должен быть указан")
+	}
+	if methodUrl == "" {
+		return errors.New("путь к методу должэен быть указан")
+	}
+	if handler == nil {
+		return errors.New("отбработчик ответа должен быть определен")
+	}
+	if _, ok := app.httpClients[requestId]; ok {
+		return errors.New("запрос с таким идентификатором уже определен")
+	}
+	app.httpClients[requestId] = httpRequestProducer{
+		serverAddr:      serverAddr,
+		methodURL:       methodUrl,
+		methodType:      http.MethodPost,
+		responseHandler: handler,
+	}
+	return nil
+}
+
+// AddPutRequest - добавление шаблона для запроса PUT
+func (app *serviceApplication) AddPutRequest(requestId, serverAddr, methodUrl string, handler func(*http.Response)) error {
+	if requestId == "" {
+		return errors.New("идентификатор запроса должен быть указан")
+	}
+	if serverAddr == "" {
+		return errors.New("адрес сервера должен быть указан")
+	}
+	if methodUrl == "" {
+		return errors.New("путь к методу должэен быть указан")
+	}
+	if handler == nil {
+		return errors.New("отбработчик ответа должен быть определен")
+	}
+	if _, ok := app.httpClients[requestId]; ok {
+		return errors.New("запрос с таким идентификатором уже определен")
+	}
+	app.httpClients[requestId] = httpRequestProducer{
+		serverAddr:      serverAddr,
+		methodURL:       methodUrl,
+		methodType:      http.MethodPut,
+		responseHandler: handler,
+	}
+	return nil
+}
+
+// AddDeleteRequest - добавление шаблона для запроса DELETE
+func (app *serviceApplication) AddDeleteRequest(requestId, serverAddr, methodUrl string, handler func(*http.Response)) error {
+	if requestId == "" {
+		return errors.New("идентификатор запроса должен быть указан")
+	}
+	if serverAddr == "" {
+		return errors.New("адрес сервера должен быть указан")
+	}
+	if methodUrl == "" {
+		return errors.New("путь к методу должэен быть указан")
+	}
+	if handler == nil {
+		return errors.New("отбработчик ответа должен быть определен")
+	}
+	if _, ok := app.httpClients[requestId]; ok {
+		return errors.New("шаблон запроса с таким идентификатором уже определен")
+	}
+	app.httpClients[requestId] = httpRequestProducer{
+		serverAddr:      serverAddr,
+		methodURL:       methodUrl,
+		methodType:      http.MethodGet,
+		responseHandler: handler,
+	}
+	return nil
+}
+
+// Request - выполнение запроса HTTP по шаблону
+func (app *serviceApplication) Request(requestId string, body []byte, params, query map[string]interface{}) error {
+	c, ok := app.httpClients[requestId]
+	if !ok {
+		return errors.New("шаблон запроса с таким идентификатором не найден")
+	}
+
+	url := c.serverAddr + func(baseString string, changeMap map[string]interface{}) string {
+		if changeMap == nil {
+			return baseString
+		}
+		changedString := baseString
+		for key, value := range changeMap {
+			changedString = strings.ReplaceAll(changedString, "{"+key+"}", fmt.Sprintf("%v", value))
+		}
+		return changedString
+
+	}(c.methodURL, params)
+
+	if query != nil {
+		queryStr := "?"
+		len := len(query)
+		i := 0
+		for key, value := range query {
+			queryStr = queryStr + key + "=" + fmt.Sprintf("%v", value)
+			i++
+			if i < len {
+				queryStr = queryStr + "&"
+			}
+		}
+		url = url + queryStr
+	}
+	client := http.Client{Timeout: time.Minute}
+
+	req, err := http.NewRequest(c.methodType, url, bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	go c.responseHandler(resp)
+	return nil
+}
+
 // Do - Метод запуска приложения
 func (app *serviceApplication) Do() {
 	log.Println("Application stated")
@@ -164,9 +326,9 @@ func (app *serviceApplication) Close() {
 	//0. Завершаем работу http сервера
 	if app.httpServer != nil {
 		log.Println("Shutdown http server")
-		if ctx, err := context.WithTimeout(context.Background(), 30*time.Second); err == nil {
-			app.httpServer.Shutdown(ctx)
-		}
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		app.httpServer.Shutdown(ctx)
 	}
 
 	//1. Закрываем соединения для менеджеров очередей
@@ -183,4 +345,5 @@ var App serviceApplication
 
 func init() {
 	App.messageManagers = make(map[string]msg.MessageManager)
+	App.httpClients = make(map[string]httpRequestProducer)
 }
