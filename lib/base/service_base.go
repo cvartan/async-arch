@@ -1,7 +1,7 @@
 package base
 
 import (
-	msg "async-arch/lib/msgconnect"
+	msg "async-arch/lib/messages"
 	"bytes"
 	"context"
 	"errors"
@@ -19,8 +19,10 @@ type serviceApplication struct {
 	messageManagers map[string]msg.MessageManager
 	httpServer      *http.Server
 	httpClients     map[string]httpRequestProducer
+	cancelFuncs     map[string]func()
 }
 
+// httpRequestProducer - шаблон http-запроса для клиента
 type httpRequestProducer struct {
 	serverAddr      string
 	methodURL       string
@@ -301,9 +303,12 @@ func (app *serviceApplication) Request(requestId string, body []byte, params, qu
 	return nil
 }
 
+func (app *serviceApplication) RegisterCancelFunc(alias string, f func()) {
+	app.cancelFuncs[alias] = f
+}
+
 // Do - Метод запуска приложения
 func (app *serviceApplication) Do() {
-	log.Println("Application stated")
 	closer.Bind(app.Close)
 
 	// Запускаем http сервер если он определен
@@ -336,14 +341,21 @@ func (app *serviceApplication) Close() {
 		log.Printf("Shutdown queue connection: %s", id)
 		manager.Close()
 	}
-	//2. Закрываем соединения для менеджеров баз данных
+	//2. Выполняем закрывающие операции
+	for alias, f := range app.cancelFuncs {
+		log.Printf("Runnig cancel func with id: %s", alias)
+		f()
+	}
 
-	log.Println("Application is close")
+	log.Println("Application has been closed")
 }
 
 var App serviceApplication
 
 func init() {
-	App.messageManagers = make(map[string]msg.MessageManager)
-	App.httpClients = make(map[string]httpRequestProducer)
+	App = serviceApplication{
+		messageManagers: make(map[string]msg.MessageManager),
+		httpClients:     make(map[string]httpRequestProducer),
+	}
+	log.Println("Application stated")
 }

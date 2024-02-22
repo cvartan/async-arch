@@ -1,7 +1,7 @@
 package rabbitmq
 
 import (
-	msg "async-arch/lib/msgconnect"
+	msg "async-arch/lib/messages"
 	"context"
 	"errors"
 	"fmt"

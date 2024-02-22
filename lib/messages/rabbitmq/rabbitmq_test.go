@@ -1,7 +1,7 @@
 package rabbitmq_test
 
 import (
-	mq "async-arch/lib/msgconnect/rabbitmq"
+	mq "async-arch/lib/messages/rabbitmq"
 	util "async-arch/util"
 	"testing"
 )

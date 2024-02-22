@@ -2,7 +2,7 @@ package base_test
 
 import (
 	"async-arch/lib/base"
-	mq "async-arch/lib/msgconnect/rabbitmq"
+	mq "async-arch/lib/messages/rabbitmq"
 	"async-arch/util"
 	"testing"
 )
