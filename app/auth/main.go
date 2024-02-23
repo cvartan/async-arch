@@ -14,5 +14,5 @@ func main() {
 	initHandlers()
 
 	// Запускаем приложение
-	base.App.Do()
+	base.App.Hold()
 }
