@@ -117,7 +117,7 @@ func HandleAuthorize(w http.ResponseWriter, r *http.Request) {
 }
 
 func initHandlers() {
-	base.App.HandleFunc("POST /api/v1/users/", HandleCreateUser)
-	base.App.HandleFunc("POST /api/v1/login/", HandleAuthentificate)
-	base.App.HandleFunc("POST /api/v1/auth/", HandleAuthorize)
+	base.App.HandleFunc("POST /api/v1/users", HandleCreateUser)
+	base.App.HandleFunc("POST /api/v1/login", HandleAuthentificate)
+	base.App.HandleFunc("POST /api/v1/auth", HandleAuthorize)
 }

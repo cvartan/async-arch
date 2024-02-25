@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	if err := base.App.InitHTTPServer("localhost", 8090); err != nil {
+	if err := base.App.InitHTTPServer("", 8090); err != nil {
 		log.Fatalln(err)
 	}
 

@@ -51,6 +51,6 @@ func WrapAuth(handler func(response http.ResponseWriter, request *http.Request),
 }
 
 func init() {
-	base.App.AddPostRequest(loginRequestId, fmt.Sprintf("http://%s:%s", authServiceAddr, authServicePort), "/api/v1/login/")
+	base.App.AddPostRequest(loginRequestId, fmt.Sprintf("http://%s:%s", authServiceAddr, authServicePort), "/api/v1/login")
 	base.App.AddPostRequest(authRequestId, fmt.Sprintf("http://%s:%s", authServiceAddr, authServicePort), "/api/v1/auth")
 }
