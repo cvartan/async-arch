@@ -6,6 +6,8 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/rabbitmq/amqp091-go v1.9.0
 	github.com/xlab/closer v1.1.0
+	gorm.io/driver/postgres v1.5.6
+	gorm.io/gorm v1.25.7
 )
 
 require (
@@ -18,6 +20,4 @@ require (
 	golang.org/x/crypto v0.19.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	gorm.io/driver/postgres v1.5.6 // indirect
-	gorm.io/gorm v1.25.7 // indirect
 )
