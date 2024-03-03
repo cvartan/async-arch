@@ -1,7 +1,8 @@
 package base
 
 import (
-	msg "async-arch/internal/lib/messages"
+	msg "async-arch/internal/lib/base/messages"
+	repo "async-arch/internal/lib/base/repository"
 	"bytes"
 	"context"
 	"errors"
@@ -20,6 +21,7 @@ type serviceApplication struct {
 	httpServer      *http.Server
 	httpClients     map[string]httpRequestProducer
 	cancelFuncs     map[string]func()
+	domains         map[string]repo.DomainRepositoryManager
 }
 
 // httpRequestProducer - шаблон http-запроса для клиента
@@ -27,6 +29,12 @@ type httpRequestProducer struct {
 	serverAddr string
 	methodURL  string
 	methodType string
+}
+
+type HttpCookie struct {
+	Name      string
+	Value     string
+	ExpiredAt time.Time
 }
 
 // RegisterMessageManager - метод регистрации нового менеджера очередей
@@ -37,39 +45,40 @@ func (app *serviceApplication) RegisterMessageManager(manager msg.MessageManager
 }
 
 // RegisterMessageProducer - метод регистрации нового публикатора сообщений
-func (app *serviceApplication) RegisterMessageProducer(managerId, producerId string, queueName string) error {
+func (app *serviceApplication) RegisterMessageProducer(managerId, producerId string, queueName string) (msg.MessageProducer, error) {
 
 	if managerId == "" {
-		return errors.New("необходимо указать имя используемого менеджера очередей")
+		return nil, errors.New("необходимо указать имя используемого менеджера очередей")
 	}
 
 	manager, ok := app.messageManagers[managerId]
 
 	if !ok {
-		return errors.New("менеджер с таким Id не найден")
+		return nil, errors.New("менеджер с таким Id не найден")
 	}
 
 	if producerId == "" {
-		return errors.New("необходимо указать имя-ключ для публикатора сообщений")
+		return nil, errors.New("необходимо указать имя-ключ для публикатора сообщений")
 	}
 
 	if queueName == "" {
-		return errors.New("необходимо указать имя очереди для публикации")
+		return nil, errors.New("необходимо указать имя очереди для публикации")
 	}
 
 	if _, ok := manager.GetProducer(producerId); ok {
-		return errors.New("публикатор с таким именем-ключом уже добавлен")
+		return nil, errors.New("публикатор с таким именем-ключом уже добавлен")
 	}
 
-	if err := manager.CreateProducer(producerId, queueName); err != nil {
-		return err
+	if err := manager.AddProducer(producerId, queueName); err != nil {
+		return nil, err
 	} else {
-		return nil
+		producer, _ := manager.GetProducer(producerId)
+		return producer, nil
 	}
 }
 
 // SendMsg - метод отправки сообщений через укзанного публикатора сообщений
-func (app *serviceApplication) SendMsg(managerId, producerId string, key []byte, value []byte, headers map[string]interface{}) error {
+func (app *serviceApplication) ProduceMessage(managerId, producerId string, key []byte, value []byte, headers map[string]interface{}) error {
 	if managerId == "" {
 		return errors.New("необходимо указать имя используемого менеджера очередей")
 	}
@@ -91,13 +100,13 @@ func (app *serviceApplication) SendMsg(managerId, producerId string, key []byte,
 	if producer, ok := manager.GetProducer(producerId); !ok {
 		return errors.New("публикатор с таким именем не найден")
 	} else {
-		return producer.SendMsg(key, value, headers)
+		return producer.ProduceMessage(key, value, headers)
 	}
 }
 
 // SendStrMsg - метод отправки сообщений в строковом формате через указанного публикатора сообщений
-func (app *serviceApplication) SendStrMsg(managerId, producerId string, key string, value string, headers map[string]interface{}) error {
-	return app.SendMsg(managerId, producerId, []byte(key), []byte(value), headers)
+func (app *serviceApplication) ProduceStringMessage(managerId, producerId string, key string, value string, headers map[string]interface{}) error {
+	return app.ProduceMessage(managerId, producerId, []byte(key), []byte(value), headers)
 }
 
 // Consume - метод прослушивания очереди
@@ -132,7 +141,7 @@ func (app *serviceApplication) InitHTTPServer(address string, port uint16) error
 		Handler: mux,
 	}
 
-	log.Printf("Starting http server at %s", app.httpServer.Addr)
+	log.Printf("Starting http server at %s\n", app.httpServer.Addr)
 	go func() {
 		if err := app.httpServer.ListenAndServe(); err != nil {
 			log.Fatal(err)
@@ -246,7 +255,7 @@ func (app *serviceApplication) AddDeleteRequest(requestId, serverAddr, methodUrl
 }
 
 // Request - выполнение запроса HTTP по шаблону
-func (app *serviceApplication) Request(requestId string, body []byte, params, query map[string]interface{}, headers map[string]string) (*http.Response, error) {
+func (app *serviceApplication) Request(requestId string, body []byte, params, query map[string]interface{}, headers map[string]string, cookies []HttpCookie) (*http.Response, error) {
 	c, ok := app.httpClients[requestId]
 	if !ok {
 		return nil, errors.New("шаблон запроса с таким идентификатором не найден")
@@ -277,6 +286,7 @@ func (app *serviceApplication) Request(requestId string, body []byte, params, qu
 		}
 		url = url + queryStr
 	}
+
 	client := http.Client{Timeout: time.Minute}
 
 	req, err := http.NewRequest(c.methodType, url, bytes.NewReader(body))
@@ -287,14 +297,47 @@ func (app *serviceApplication) Request(requestId string, body []byte, params, qu
 		req.Header.Add(header, value)
 	}
 
+	for _, cookie := range cookies {
+		req.AddCookie(&http.Cookie{
+			Name:    cookie.Name,
+			Value:   cookie.Value,
+			Expires: cookie.ExpiredAt,
+		})
+	}
+
 	return client.Do(req)
 }
 
+// RegisterDomainRepository - регистрация нового репозитория для домена данных
+func (app *serviceApplication) RegisterDomainRepository(repoId string, repository repo.DomainRepositoryManager) error {
+	if repoId == "" {
+		return errors.New("идентификатор домена должен быть указан")
+	}
+	if repository == nil {
+		return errors.New("репозиторий домена должен быть указан")
+	}
+	if _, ok := app.domains[repoId]; ok {
+		return errors.New("репозиторий с таким идентификатором уже добавлен")
+	}
+	app.domains[repoId] = repository
+	return nil
+}
+
+func (app *serviceApplication) GetDomainRepository(repoId string) (repo.DomainRepositoryManager, error) {
+	repository, ok := app.domains[repoId]
+	if !ok {
+		return nil, errors.New("репозиторий с таким идентфиикатором не найден")
+	}
+
+	return repository, nil
+}
+
+// RegisterCancelFunc - регистрация закрывающей функции (которая выполнится при выходе из приложения)
 func (app *serviceApplication) RegisterCancelFunc(alias string, f func()) {
 	app.cancelFuncs[alias] = f
 }
 
-// Do - Метод запуска приложения
+// Hold - удержание приложения в работе
 func (app *serviceApplication) Hold() {
 	closer.Bind(app.Close)
 	closer.Hold()
@@ -304,7 +347,13 @@ func (app *serviceApplication) Hold() {
 func (app *serviceApplication) Close() {
 	log.Println("Starting closing process")
 
-	//0. Завершаем работу http сервера
+	// 1. Выполняем закрывающие операции
+	for alias, f := range app.cancelFuncs {
+		log.Printf("Runnig cancel func with id: %s\n", alias)
+		f()
+	}
+
+	// 2. Завершаем работу http сервера
 	if app.httpServer != nil {
 		log.Println("Shutdown http server")
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -312,15 +361,16 @@ func (app *serviceApplication) Close() {
 		app.httpServer.Shutdown(ctx)
 	}
 
-	//1. Закрываем соединения для менеджеров очередей
+	// 3. Закрываем соединения для менеджеров очередей
 	for id, manager := range app.messageManagers {
-		log.Printf("Shutdown queue connection: %s", id)
+		log.Printf("Shutdown queue connection: %s\n", id)
 		manager.Close()
 	}
-	//2. Выполняем закрывающие операции
-	for alias, f := range app.cancelFuncs {
-		log.Printf("Runnig cancel func with id: %s", alias)
-		f()
+
+	// 4. Закрываем соединения с репозиториями
+	for id, repository := range app.domains {
+		log.Printf("Shutdown database connection for %s\n", id)
+		repository.Close()
 	}
 
 	log.Println("Application has been closed")
@@ -332,6 +382,7 @@ func init() {
 	App = serviceApplication{
 		messageManagers: make(map[string]msg.MessageManager),
 		httpClients:     make(map[string]httpRequestProducer),
+		domains:         make(map[string]repo.DomainRepositoryManager),
 	}
 	log.Println("Application started")
 }
