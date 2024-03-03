@@ -113,7 +113,10 @@ func handleCreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // Метод аутентификации попугая
-func handleAuthentificate(w http.ResponseWriter, r *http.Request) {
+func handleAuthentificate(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 
 	// Получаем уникальный оттиск ключа в качестве логина и пароль
 	beak, password, ok := r.BasicAuth()

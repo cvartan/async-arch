@@ -18,7 +18,14 @@ type EventProducer struct {
 }
 
 // Создание продюсера событий
-func CreateEventProducer(manager msg.MessageManager, sender, queueName string) (*EventProducer, error) {
+func CreateEventProducer(
+	manager msg.MessageManager, // Менеджер сообщений
+	sender, // Имя сервиса - отправителя сообщений
+	queueName string, // Имя очереди в которую помещаются исходящие сообщения
+) (
+	*EventProducer, // Продюсер событий
+	error, // Ошибка
+) {
 	producerId := uuid.NewString()
 	err := manager.AddProducer(producerId, queueName)
 	if err != nil {
