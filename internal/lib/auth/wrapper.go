@@ -5,11 +5,8 @@ import (
 	"async-arch/internal/lib/base"
 	"async-arch/internal/lib/httptool"
 	"async-arch/internal/lib/sysenv"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
-	"strings"
 
 	"github.com/google/uuid"
 )
@@ -32,29 +29,17 @@ func WithAuth(handler http.HandlerFunc, roles []model.UserRole) http.HandlerFunc
 		}
 		tokenStr := tokentCookie.Value
 
-		// Делаем запрос на сервис авторизации - получаем расшифровку токена (к сожалению в версии 1.22 что-то сломали в декодировании PEM-формата и ключ теперь получить нормально нельзя - он не преобразуется из строки в структуру rsa.PublicKey)
-		resp, err := base.App.Request(keyRequestId, []byte(tokenStr), nil, nil, nil, nil)
-		if err != nil {
-			httptool.SetStatus500(w, err)
-			return
-		}
-		defer resp.Body.Close()
-
-		var checkInfo CheckResponse
-		source, err := io.ReadAll(resp.Body)
-		if err != nil {
-			httptool.SetStatus500(w, err)
-			return
-		}
-		err = json.NewDecoder(strings.NewReader(string(source))).Decode(&checkInfo)
+		checker, err := CreateJwtTokenChecker("http", fmt.Sprintf("%s:%s", authServiceAddr, authServicePort), "GET", "/api/v1/key")
 		if err != nil {
 			httptool.SetStatus500(w, err)
 			return
 		}
 
-		/*
-			TODO: разобраться с декодером PEM-формата и сделать через локальную проверку (или найти другие библиотеки по работе с RSA)
-		*/
+		checkInfo, err := checker.Check(tokenStr)
+		if err != nil {
+			httptool.SetStatus401(w, err.Error())
+			return
+		}
 
 		// Если переданы роли, то проверяем на них
 		if roles != nil {

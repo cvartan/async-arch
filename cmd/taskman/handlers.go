@@ -228,9 +228,10 @@ func handleCompleteTask(w http.ResponseWriter, r *http.Request) {
 	taskID := r.PathValue("id")
 	repo, _ := base.App.GetDomainRepository("task")
 	task := &model.Task{}
-	err := repo.Get(task, map[string]interface{}{"id": taskID})
+	err := repo.Get(task, map[string]interface{}{"id": taskID, "state": "ACTIVE"})
 	if err != nil {
-		log.Fatal(err)
+		httptool.SetStatus500(w, err)
+		return
 	}
 
 	// Получаем идентификатор пользовтаеля по данным авторизации (из jwt-токена)
