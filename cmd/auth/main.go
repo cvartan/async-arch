@@ -32,7 +32,7 @@ func main() {
 	base.App.RegisterMessageManager(manager)
 
 	// Инициализируем продюсер событий
-	eventProducer, err = event.CreateEventProducer(manager, "auth", "CUD_channel")
+	eventProducer, err = event.CreateEventProducer(manager, "user-streaming", "user-streaming")
 	if err != nil {
 		log.Fatal(err)
 	}
