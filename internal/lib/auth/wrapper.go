@@ -2,13 +2,11 @@ package auth
 
 import (
 	model "async-arch/internal/domain/auth"
-	"async-arch/internal/lib/base"
 	"async-arch/internal/lib/httptool"
 	"async-arch/internal/lib/sysenv"
 	"fmt"
+	"log"
 	"net/http"
-
-	"github.com/google/uuid"
 )
 
 type CheckResponse struct {
@@ -28,12 +26,6 @@ func WithAuth(handler http.HandlerFunc, roles []model.UserRole) http.HandlerFunc
 			return
 		}
 		tokenStr := tokentCookie.Value
-
-		checker, err := CreateJwtTokenChecker("http", fmt.Sprintf("%s:%s", authServiceAddr, authServicePort), "GET", "/api/v1/key")
-		if err != nil {
-			httptool.SetStatus500(w, err)
-			return
-		}
 
 		checkInfo, err := checker.Check(tokenStr)
 		if err != nil {
@@ -68,12 +60,16 @@ func WithAuth(handler http.HandlerFunc, roles []model.UserRole) http.HandlerFunc
 	}
 }
 
-var authServiceAddr string = sysenv.GetEnvValue("AUTH_SERVER", "localhost") // Адрес сервера авторизации
-var authServicePort string = sysenv.GetEnvValue("AUTH_SERVER_PORT", "8090") // Порт сервера авторизации
-
-var keyRequestId string = uuid.NewString() // ИД шаблона для запроса проверки токена
+var (
+	checker         *JwtTokenChecker
+	authServiceAddr string = sysenv.GetEnvValue("AUTH_SERVER", "localhost") // Адрес сервера авторизации
+	authServicePort string = sysenv.GetEnvValue("AUTH_SERVER_PORT", "8090") // Порт сервера авторизации
+)
 
 func init() {
-	// Добавляем шаблон запроса проверки токена
-	base.App.AddPostRequest(keyRequestId, fmt.Sprintf("http://%s:%s", authServiceAddr, authServicePort), "/api/v1/check")
+	var err error
+	checker, err = CreateJwtTokenChecker("http", fmt.Sprintf("%s:%s", authServiceAddr, authServicePort), "GET", "/api/v1/key")
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
