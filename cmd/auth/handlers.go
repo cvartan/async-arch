@@ -34,6 +34,8 @@ func initHandlers() {
 	base.App.HandleFunc("POST /api/v1/check", handleCheck)
 
 	// Для простоты генерируем приватный ключ (вместо использования заранее сгененренных ключей)
+	// TODO: Вместо генерации надо использовать файл с приватным ключом и публичным.
+	// Иначе получится, что перезапуск сервера авторизации все сбросит, а сервисы потребители ни о чем не узнают
 	pk, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		log.Fatalln(err)
@@ -188,6 +190,7 @@ func handleAuthentificate(
 }
 
 // Метод получения публичного ключа сервиса авторизации
+// TODO: После перехода на файл с ключом - убрать этот метод
 func handleGetKey(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text")
 	// Формируем текст в формате PEM
