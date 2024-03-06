@@ -2,6 +2,8 @@
 
 package auth
 
+import jwt "github.com/golang-jwt/jwt/v5"
+
 // User - пользователь
 type User struct {
 	ID       uint       `gorm:"primaryKey"`
@@ -25,3 +27,9 @@ const (
 	DEVELOPER UserRole = "DEVELOPER"
 	ACCOUNTER UserRole = "ACCOUNTER"
 )
+
+type AuthClaims struct {
+	jwt.RegisteredClaims
+	UserUuid string
+	UserRole string
+}

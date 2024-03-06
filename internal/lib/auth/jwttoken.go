@@ -9,16 +9,10 @@ import (
 	"io"
 	"net/http"
 
+	model "async-arch/internal/domain/auth"
+
 	jwt "github.com/golang-jwt/jwt/v5"
 )
-
-type AuthClaims struct {
-	jwt.RegisteredClaims
-	UserUuid string
-	UserRole string
-}
-
-// TODO: проверить и подставить во враппер - чтобы не запрашивать постоянно проверку токена на сервисе авторизации
 
 // JwtTokenChecker - проверка jwt токена
 type JwtTokenChecker struct {
@@ -58,8 +52,8 @@ func CreateJwtTokenChecker(httpProtocol, authServerAddr, publicKeyHttpMethod, pu
 	}, nil
 }
 
-func (c *JwtTokenChecker) Check(tokenString string) (*AuthClaims, error) {
-	claims := &AuthClaims{}
+func (c *JwtTokenChecker) Check(tokenString string) (*model.AuthClaims, error) {
+	claims := &model.AuthClaims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) { return c.publicKey, nil })
 	if err != nil {

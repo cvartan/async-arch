@@ -39,10 +39,9 @@ type Event struct {
 
 // TaskEventData - данные задачи для события
 type TaskEventData struct {
-	Uuid        string          `json:"uuid"`
-	Description string          `json:"description"`
-	UserUuid    string          `json:"userUuid"`
-	State       model.TaskState `json:"state"`
+	Uuid             string `json:"uuid"`
+	Description      string `json:"description"`
+	AssignedUserUuid string `json:"userUuid"`
 }
 
 // UserTasksList - список задач
