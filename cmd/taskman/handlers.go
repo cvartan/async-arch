@@ -11,6 +11,7 @@ import (
 	httptool "async-arch/internal/lib/httptool"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"reflect"
@@ -43,7 +44,12 @@ func handleCreateTask(w http.ResponseWriter, r *http.Request) {
 
 	// Присваиваем задаче произвольного пользователя
 	randomUser := CreateUserRandomizer()
-	task.UserUuid = randomUser.Uuid()
+	newUser := randomUser.Uuid()
+	if newUser == "" {
+		httptool.SetStatus500(w, errors.New("нет пользователей для назначения задаче"))
+		return
+	}
+	task.AssignedUserUuid = newUser
 
 	// Сохраняем задачу в БД
 	repo, _ := base.App.GetDomainRepository("task")
@@ -58,7 +64,7 @@ func handleCreateTask(w http.ResponseWriter, r *http.Request) {
 		ID:          task.ID,
 		Uuid:        task.Uuid,
 		Description: task.Description,
-		UserUuid:    task.UserUuid,
+		UserUuid:    task.AssignedUserUuid,
 		State:       task.State,
 	}
 
@@ -72,10 +78,9 @@ func handleCreateTask(w http.ResponseWriter, r *http.Request) {
 
 	// Отправляем CUD событие добавления задачи в очередь CUD-событий
 	eventData := TaskEventData{
-		Uuid:        task.Uuid,
-		Description: task.Description,
-		UserUuid:    task.UserUuid,
-		State:       task.State,
+		Uuid:             task.Uuid,
+		Description:      task.Description,
+		AssignedUserUuid: task.AssignedUserUuid,
 	}
 
 	eventCUD, err := eventProducerCUD.ProduceEventData(event.TASK_CUD_TASK_CREATED, task.Uuid, reflect.TypeOf(*task).String(), eventData)
@@ -134,10 +139,14 @@ func handleReassignTask(w http.ResponseWriter, r *http.Request) {
 
 	// Получаем список пользователей для назначения
 	randomizer := CreateUserRandomizer()
+	if randomizer.Len() == 0 {
+		httptool.SetStatus500(w, errors.New("нет пользователей для назначения"))
+		return
+	}
 
 	// Получаем список открытых задач
 	repo, _ := base.App.GetDomainRepository("task")
-	result, err := repo.RawQuery("select id,uuid,description,user_uuid,state from task.task where state='ACTIVE'")
+	result, err := repo.RawQuery("select id,uuid,description,assigned_user_uuid,state from task.task where state='ACTIVE'")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -146,15 +155,15 @@ func handleReassignTask(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		task := &model.Task{}
-		err := rows.Scan(&task.ID, &task.Uuid, &task.Description, &task.UserUuid, &task.State)
+		err := rows.Scan(&task.ID, &task.Uuid, &task.Description, &task.AssignedUserUuid, &task.State)
 		if err != nil {
 			log.Fatal(err)
 		}
 		// Сохпаняем текущего пользователя у заадчи (чтобы потом не отсылать события, если пользователь у задачи не поменялся)
-		prevTaskUserAssignments[task.ID] = task.UserUuid
+		prevTaskUserAssignments[task.ID] = task.AssignedUserUuid
 
 		// Устанавливаем нового пользовтаеля задаче
-		task.UserUuid = randomizer.Uuid()
+		task.AssignedUserUuid = randomizer.Uuid()
 
 		tasks = append(tasks, task)
 	}
@@ -163,7 +172,7 @@ func handleReassignTask(w http.ResponseWriter, r *http.Request) {
 	var responseData ReassingTasksResponse
 
 	for _, task := range tasks {
-		if task.UserUuid != prevTaskUserAssignments[task.ID] {
+		if task.AssignedUserUuid != prevTaskUserAssignments[task.ID] {
 			// Делаем, если у задачи поменялся пользователь
 			// Обновляем задачу в БД
 			err := repo.Update(task)
@@ -172,10 +181,9 @@ func handleReassignTask(w http.ResponseWriter, r *http.Request) {
 			}
 			// Теперь отсылаем CUD событие изменения задачи
 			eventData := TaskEventData{
-				Uuid:        task.Uuid,
-				Description: task.Description,
-				UserUuid:    task.UserUuid,
-				State:       task.State,
+				Uuid:             task.Uuid,
+				Description:      task.Description,
+				AssignedUserUuid: task.AssignedUserUuid,
 			}
 
 			eventCUD, err := eventProducerCUD.ProduceEventData(event.TASK_CUD_TASK_UPDATED, task.Uuid, reflect.TypeOf(*task).String(), eventData)
@@ -211,7 +219,7 @@ func handleReassignTask(w http.ResponseWriter, r *http.Request) {
 			responseData = append(responseData, ReassignTasksResponseItem{
 				ID:       task.ID,
 				Uuid:     task.Uuid,
-				UserUuid: task.UserUuid,
+				UserUuid: task.AssignedUserUuid,
 			})
 		}
 	}
@@ -239,7 +247,7 @@ func handleCompleteTask(w http.ResponseWriter, r *http.Request) {
 	userUuid := r.Header.Get("X-Auth-User-UUID")
 
 	// Проверяем, что пользовтаель закрывает совю задачу
-	if task.UserUuid != userUuid {
+	if task.AssignedUserUuid != userUuid {
 		httptool.SetStatus401(w, "Task assigned to another user")
 		return
 	}
@@ -254,7 +262,7 @@ func handleCompleteTask(w http.ResponseWriter, r *http.Request) {
 		ID:          task.ID,
 		Uuid:        task.Uuid,
 		Description: task.Description,
-		UserUuid:    task.UserUuid,
+		UserUuid:    task.AssignedUserUuid,
 		State:       task.State,
 	}
 
@@ -266,10 +274,9 @@ func handleCompleteTask(w http.ResponseWriter, r *http.Request) {
 
 	// Отправляем CUD событие изменения задачи в очередь CUD-событий
 	eventData := TaskEventData{
-		Uuid:        task.Uuid,
-		Description: task.Description,
-		UserUuid:    task.UserUuid,
-		State:       task.State,
+		Uuid:             task.Uuid,
+		Description:      task.Description,
+		AssignedUserUuid: task.AssignedUserUuid,
 	}
 
 	eventCUD, err := eventProducerCUD.ProduceEventData(event.TASK_CUD_TASK_UPDATED, task.Uuid, reflect.TypeOf(*task).String(), eventData)
@@ -310,7 +317,7 @@ func handleGetUserTasks(w http.ResponseWriter, r *http.Request) {
 	var tasks UserTasksList
 
 	repo, _ := base.App.GetDomainRepository("task")
-	result, err := repo.RawQuery("select id,uuid,description,user_uuid,state from task.task where state='ACTIVE' and user_uuid =?", r.Header.Get("X-Auth-User-UUID"))
+	result, err := repo.RawQuery("select id,uuid,description,assigned_user_uuid,state from task.task where state='ACTIVE' and assigned_user_uuid =?", r.Header.Get("X-Auth-User-UUID"))
 	if err != nil {
 		httptool.SetStatus500(w, err)
 		return
@@ -320,7 +327,7 @@ func handleGetUserTasks(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		task := &model.Task{}
-		err := rows.Scan(&task.ID, &task.Uuid, &task.Description, &task.UserUuid, &task.State)
+		err := rows.Scan(&task.ID, &task.Uuid, &task.Description, &task.AssignedUserUuid, &task.State)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -329,7 +336,7 @@ func handleGetUserTasks(w http.ResponseWriter, r *http.Request) {
 			ID:          task.ID,
 			Uuid:        task.Uuid,
 			Description: task.Description,
-			UserUuid:    task.UserUuid,
+			UserUuid:    task.AssignedUserUuid,
 			State:       task.State,
 		})
 	}

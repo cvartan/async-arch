@@ -4,7 +4,6 @@ package main
 
 import (
 	model "async-arch/internal/domain/auth"
-	authlib "async-arch/internal/lib/auth"
 	"async-arch/internal/lib/base"
 	"async-arch/internal/lib/event"
 	"async-arch/internal/lib/httptool"
@@ -35,6 +34,8 @@ func initHandlers() {
 	base.App.HandleFunc("POST /api/v1/check", handleCheck)
 
 	// Для простоты генерируем приватный ключ (вместо использования заранее сгененренных ключей)
+	// TODO: Вместо генерации надо использовать файл с приватным ключом и публичным.
+	// Иначе получится, что перезапуск сервера авторизации все сбросит, а сервисы потребители ни о чем не узнают
 	pk, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		log.Fatalln(err)
@@ -158,7 +159,7 @@ func handleAuthentificate(
 	expiresAt := time.Now().Add(time.Minute * 5)
 
 	// Задаем структуру токена JWT
-	claims := authlib.AuthClaims{
+	claims := model.AuthClaims{
 		UserUuid: user.Uuid,
 		UserRole: string(user.Role),
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -189,6 +190,7 @@ func handleAuthentificate(
 }
 
 // Метод получения публичного ключа сервиса авторизации
+// TODO: После перехода на файл с ключом - убрать этот метод
 func handleGetKey(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text")
 	// Формируем текст в формате PEM
@@ -201,6 +203,8 @@ func handleGetKey(w http.ResponseWriter, r *http.Request) {
 }
 
 // Метод проверки токена (добавляем так как, судя по всему, в 1.22 сломали декодер PEM-формата - поэтому публичный ключ передать не получается)
+//
+// Deprecated: проверка токена выполняется в самом сервисе, к которому подключается пользователь. Оставлено для экстернных случаев.
 func handleCheck(w http.ResponseWriter, r *http.Request) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -209,7 +213,7 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 	}
 	tokenStr := string(b)
 	// Получаем токен в структурированном виде
-	claims := &authlib.AuthClaims{}
+	claims := &model.AuthClaims{}
 
 	token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) { return &authPrivateKey.PublicKey, nil })
 

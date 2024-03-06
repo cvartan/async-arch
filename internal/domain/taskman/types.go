@@ -16,11 +16,11 @@ type User struct {
 
 // Задача
 type Task struct {
-	ID          uint   `gorm:"primaryKey"`
-	Uuid        string `gorm:"unique"`
-	Description string `gorm:"not null"`
-	UserUuid    string `gorm:"not null"`
-	State       TaskState
+	ID               uint   `gorm:"primaryKey"`
+	Uuid             string `gorm:"unique"`
+	Description      string `gorm:"not null"`
+	AssignedUserUuid string `gorm:"not null"`
+	State            TaskState
 }
 
 // Состояния задачи

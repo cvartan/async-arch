@@ -34,17 +34,17 @@ func main() {
 	}
 	base.App.RegisterMessageManager(manager)
 
-	eventProducerCUD, err = event.CreateEventProducer(manager, "task", "CUD_channel")
+	eventProducerCUD, err = event.CreateEventProducer(manager, "task-streaming", "task-streaming")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	eventProducerBE, err = event.CreateEventProducer(manager, "task", "BE_channel")
+	eventProducerBE, err = event.CreateEventProducer(manager, "task-lifecycle", "task-lifecycle-log")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	eventConsumer = event.CreateEventConsumer(manager, "CUD_TASK")
+	eventConsumer = event.CreateEventConsumer(manager, "task-streaming")
 	initEventHandlers()
 
 	// Запускаем приложение
