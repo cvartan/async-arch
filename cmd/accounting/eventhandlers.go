@@ -74,6 +74,7 @@ func handleTaskCreateEvent(event *events.Event, data interface{}) {
 
 	taskData.AssignmentTaskPrice = task.AssignmentTaskPrice
 	taskData.CompletedTaskPrice = task.CompleteTaskPrice
+	taskData.State = "ACTIVE"
 
 	_, err = eventProducerTaskCUD.ProduceEventData(eventmodel.ACC_CUD_TASK_PRICED, task.Uuid, reflect.TypeOf(*task).String(), taskData, "1")
 	if err != nil {

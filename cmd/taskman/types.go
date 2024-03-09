@@ -8,6 +8,8 @@ import (
 
 // CreateTaskRequest - данные запроса создания задачи
 type CreateTaskRequest struct {
+	Title       string `json:"title"`
+	JiraId      string `json:"jira-id"`
 	Description string `json:"description"`
 }
 
@@ -15,6 +17,8 @@ type CreateTaskRequest struct {
 type TaskResponse struct {
 	ID          uint            `json:"id"`
 	Uuid        string          `json:"uuid"`
+	Title       string          `json:"title"`
+	JiraId      string          `json:"jira-id"`
 	Description string          `json:"description"`
 	UserUuid    string          `json:"userUuid"`
 	State       model.TaskState `json:"state"`
