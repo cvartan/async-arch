@@ -111,19 +111,19 @@ func handleCreateTask(w http.ResponseWriter, r *http.Request) {
 		State:         string(task.State),
 	}
 
-	_, err = eventProducerCUD.ProduceEventData(eventmodel.TASK_CUD_TASK_CREATED, task.Uuid, reflect.TypeOf(*task).String(), eventStreamData, "2")
+	_, err = eventProducerCUD.ProduceEventData(eventmodel.TASK_CUD_TASK_CREATED, task.Uuid, reflect.TypeOf(*task).String(), eventStreamData, "2", []string{"1"})
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Отправляем BE событие добавления задачи в очередь BE-событий
-	_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_CREATED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "2")
+	_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_CREATED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "2", []string{"1"})
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Отправляем BE событие назначения задачи в очередь BE-событий
-	_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_ASSIGNED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "2")
+	_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_ASSIGNED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "2", []string{"1"})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -190,13 +190,13 @@ func handleReassignTask(w http.ResponseWriter, r *http.Request) {
 				State:         string(task.State),
 			}
 
-			_, err = eventProducerCUD.ProduceEventData(eventmodel.TASK_CUD_TASK_UPDATED, task.Uuid, reflect.TypeOf(*task).String(), eventStreamData, "2")
+			_, err = eventProducerCUD.ProduceEventData(eventmodel.TASK_CUD_TASK_UPDATED, task.Uuid, reflect.TypeOf(*task).String(), eventStreamData, "2", []string{"1"})
 			if err != nil {
 				log.Fatal(err)
 			}
 
 			// Отправляем BEсобытие изменения пользователя задачи в очередь BE-событий
-			_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_ASSIGNED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "2")
+			_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_ASSIGNED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "2", []string{"1"})
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -272,13 +272,13 @@ func handleCompleteTask(w http.ResponseWriter, r *http.Request) {
 		State:         string(task.State),
 	}
 
-	_, err = eventProducerCUD.ProduceEventData(eventmodel.TASK_CUD_TASK_UPDATED, task.Uuid, reflect.TypeOf(*task).String(), eventStreamData, "2")
+	_, err = eventProducerCUD.ProduceEventData(eventmodel.TASK_CUD_TASK_UPDATED, task.Uuid, reflect.TypeOf(*task).String(), eventStreamData, "2", []string{"1"})
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Отправляем BEсобытие закрытия задачи в очередь BE-событий
-	_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_COMPLETED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "2")
+	_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_COMPLETED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "2", []string{"1"})
 	if err != nil {
 		log.Fatal(err)
 	}
