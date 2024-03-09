@@ -4,8 +4,8 @@ package main
 
 import (
 	model "async-arch/internal/domain/auth"
+	eventmodel "async-arch/internal/domain/event"
 	"async-arch/internal/lib/base"
-	"async-arch/internal/lib/event"
 	"async-arch/internal/lib/httptool"
 	"crypto/md5"
 	"crypto/rand"
@@ -91,23 +91,13 @@ func handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(201)
 
 	// Отправляем событие в очередь
-	eventData := UserEventData{
+	eventData := eventmodel.UserEventData{
 		Uuid:  user.Uuid,
 		Name:  user.Name,
 		Email: user.EMail,
 		Role:  string(user.Role),
 	}
-	evnt, err := eventProducer.ProduceEventData(event.AUTH_CUD_USER_CREATED, user.Uuid, reflect.TypeOf(*user).String(), eventData)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// Сохраняем событие в БД
-	e := &Event{
-		Event:         *evnt,
-		UserEventData: eventData,
-	}
-
-	err = repo.Append(e)
+	_, err = eventProducer.ProduceEventData(eventmodel.AUTH_CUD_USER_CREATED, user.Uuid, reflect.TypeOf(*user).String(), eventData, "1")
 	if err != nil {
 		log.Fatal(err)
 	}

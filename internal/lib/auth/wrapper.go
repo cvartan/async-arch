@@ -27,6 +27,13 @@ func WithAuth(handler http.HandlerFunc, roles []model.UserRole) http.HandlerFunc
 		}
 		tokenStr := tokentCookie.Value
 
+		if checker == nil {
+			checker, err = CreateJwtTokenChecker("http", fmt.Sprintf("%s:%s", authServiceAddr, authServicePort), "GET", "/api/v1/key")
+			if err != nil {
+				log.Fatalln(err)
+			}
+		}
+
 		checkInfo, err := checker.Check(tokenStr)
 		if err != nil {
 			httptool.SetStatus401(w, err.Error())
@@ -65,11 +72,3 @@ var (
 	authServiceAddr string = sysenv.GetEnvValue("AUTH_SERVER", "localhost") // Адрес сервера авторизации
 	authServicePort string = sysenv.GetEnvValue("AUTH_SERVER_PORT", "8090") // Порт сервера авторизации
 )
-
-func init() {
-	var err error
-	checker, err = CreateJwtTokenChecker("http", fmt.Sprintf("%s:%s", authServiceAddr, authServicePort), "GET", "/api/v1/key")
-	if err != nil {
-		log.Fatalln(err)
-	}
-}

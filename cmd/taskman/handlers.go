@@ -4,10 +4,10 @@ package main
 
 import (
 	authmodel "async-arch/internal/domain/auth"
+	eventmodel "async-arch/internal/domain/event"
 	model "async-arch/internal/domain/taskman"
 	authtool "async-arch/internal/lib/auth"
 	base "async-arch/internal/lib/base"
-	"async-arch/internal/lib/event"
 	httptool "async-arch/internal/lib/httptool"
 	"database/sql"
 	"encoding/json"
@@ -77,56 +77,30 @@ func handleCreateTask(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(201)
 
 	// Отправляем CUD событие добавления задачи в очередь CUD-событий
-	eventData := TaskEventData{
+	eventData := eventmodel.TaskEventData{
 		Uuid:             task.Uuid,
 		Description:      task.Description,
 		AssignedUserUuid: task.AssignedUserUuid,
 	}
 
-	eventCUD, err := eventProducerCUD.ProduceEventData(event.TASK_CUD_TASK_CREATED, task.Uuid, reflect.TypeOf(*task).String(), eventData)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Сохраняем отправленное CUD событие в БД
-	cud := &Event{
-		Event:         *eventCUD,
+	eventStreamData := eventmodel.TaskStreamData{
 		TaskEventData: eventData,
+		State:         string(task.State),
 	}
 
-	err = repo.Append(cud)
+	_, err = eventProducerCUD.ProduceEventData(eventmodel.TASK_CUD_TASK_CREATED, task.Uuid, reflect.TypeOf(*task).String(), eventStreamData, "1")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Отправляем BE событие добавления задачи в очередь BE-событий
-	eventBE1, err := eventProducerBE.ProduceEventData(event.TASK_BE_TASK_CREATED, task.Uuid, reflect.TypeOf(*task).String(), eventData)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Сохраняем отправленное BE событие в БД
-	be1 := &Event{
-		Event:         *eventBE1,
-		TaskEventData: eventData,
-	}
-	err = repo.Append(be1)
+	_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_CREATED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "1")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Отправляем BE событие назначения задачи в очередь BE-событий
-	eventBE2, err := eventProducerBE.ProduceEventData(event.TASK_BE_TASK_ASSIGNED, task.Uuid, reflect.TypeOf(*task).String(), eventData)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Сохраняем отправленное BE событие в БД
-	be2 := &Event{
-		Event:         *eventBE2,
-		TaskEventData: eventData,
-	}
-	err = repo.Append(be2)
+	_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_ASSIGNED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "1")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -180,41 +154,28 @@ func handleReassignTask(w http.ResponseWriter, r *http.Request) {
 				log.Fatal(err)
 			}
 			// Теперь отсылаем CUD событие изменения задачи
-			eventData := TaskEventData{
+			eventData := eventmodel.TaskEventData{
 				Uuid:             task.Uuid,
 				Description:      task.Description,
 				AssignedUserUuid: task.AssignedUserUuid,
 			}
 
-			eventCUD, err := eventProducerCUD.ProduceEventData(event.TASK_CUD_TASK_UPDATED, task.Uuid, reflect.TypeOf(*task).String(), eventData)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			cud := &Event{
-				Event:         *eventCUD,
+			eventStreamData := eventmodel.TaskStreamData{
 				TaskEventData: eventData,
+				State:         string(task.State),
 			}
 
-			err = repo.Append(cud)
+			_, err = eventProducerCUD.ProduceEventData(eventmodel.TASK_CUD_TASK_UPDATED, task.Uuid, reflect.TypeOf(*task).String(), eventStreamData, "1")
 			if err != nil {
 				log.Fatal(err)
 			}
 
 			// Отправляем BEсобытие изменения пользователя задачи в очередь BE-событий
-			eventBE, err := eventProducerBE.ProduceEventData(event.TASK_BE_TASK_ASSIGNED, task.Uuid, reflect.TypeOf(*task).String(), eventData)
+			_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_ASSIGNED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "1")
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			be := &Event{
-				Event:         *eventBE,
-				TaskEventData: eventData,
-			}
-			err = repo.Append(be)
-			if err != nil {
-				log.Fatal(err)
-			}
 			// Добавляем задачу в ответ
 			responseData = append(responseData, ReassignTasksResponseItem{
 				ID:       task.ID,
@@ -273,42 +234,27 @@ func handleCompleteTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Отправляем CUD событие изменения задачи в очередь CUD-событий
-	eventData := TaskEventData{
+	eventData := eventmodel.TaskEventData{
 		Uuid:             task.Uuid,
 		Description:      task.Description,
 		AssignedUserUuid: task.AssignedUserUuid,
 	}
 
-	eventCUD, err := eventProducerCUD.ProduceEventData(event.TASK_CUD_TASK_UPDATED, task.Uuid, reflect.TypeOf(*task).String(), eventData)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	cud := &Event{
-		Event:         *eventCUD,
+	eventStreamData := eventmodel.TaskStreamData{
 		TaskEventData: eventData,
+		State:         string(task.State),
 	}
 
-	err = repo.Append(cud)
+	_, err = eventProducerCUD.ProduceEventData(eventmodel.TASK_CUD_TASK_UPDATED, task.Uuid, reflect.TypeOf(*task).String(), eventStreamData, "1")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Отправляем BEсобытие закрытия задачи в очередь BE-событий
-	eventBE, err := eventProducerBE.ProduceEventData(event.TASK_BE_TASK_COMPLETED, task.Uuid, reflect.TypeOf(*task).String(), eventData)
+	_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_COMPLETED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "1")
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	be := &Event{
-		Event:         *eventBE,
-		TaskEventData: eventData,
-	}
-	err = repo.Append(be)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 }
 
 // Обработка запроса на получение списка задач текущего пользователя

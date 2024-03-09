@@ -4,6 +4,7 @@ package main
 
 import (
 	auth "async-arch/internal/domain/auth"
+	eventmodel "async-arch/internal/domain/event"
 	model "async-arch/internal/domain/taskman"
 	base "async-arch/internal/lib/base"
 	events "async-arch/internal/lib/event"
@@ -22,7 +23,7 @@ type UserEventData struct {
 
 // Инициализация обработчиков по событиям
 func initEventHandlers() {
-	eventConsumer.AddConsumedEvent(events.AUTH_CUD_USER_CREATED, handleUserCreatedEvent)
+	eventConsumer.AddConsumedEvent(eventmodel.AUTH_CUD_USER_CREATED, "1", handleUserCreatedEvent)
 	eventConsumer.Consume()
 }
 

@@ -6,28 +6,30 @@ import "time"
 
 // Данные пользователя
 type User struct {
-	ID      uint    `gorm:"primaryKey"`
-	Uuid    string  `gorm:"unique"`
-	Name    string  `gorm:"not null"`
-	Balance float32 `gorm:"default:0"`
+	ID      uint   `gorm:"primaryKey"`
+	Uuid    string `gorm:"unique"`
+	Name    string `gorm:"not null"`
+	Balance int    `gorm:"default:0"`
 }
 
 // Данные задачи
 type Task struct {
-	ID                  uint    `gorm:"primaryKey"`
-	Uuid                string  `gorm:"unique"`
-	AssignmentTaskPrice float32 `gorm:"not null"`
-	CompleteTaskPrice   float32 `gorm:"not null"`
+	ID                  uint   `gorm:"primaryKey"`
+	Uuid                string `gorm:"unique"`
+	AssignedUserUuid    string `gorm:"not null"`
+	AssignmentTaskPrice int    `gorm:"not null"`
+	CompleteTaskPrice   int    `gorm:"not null"`
 }
 
 // Транзакция
 type Transaction struct {
 	ID       uint            `gorm:"primaryKey"`
+	Uuid     string          `gorm:"unique"`
 	Time     time.Time       `gorm:"not null"`
 	UserUuid string          `gorm:"not null"`
 	TaskUuid string          `gorm:"not null"`
 	Type     TransactionType `gorm:"not null"`
-	Value    float32         `gorm:"not null"`
+	Value    int             `gorm:"not null"`
 }
 
 // Тип транзакции

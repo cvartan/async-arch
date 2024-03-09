@@ -34,9 +34,4 @@ func initModel() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	_, err = domainRepo.CreateObjectRepository(&Event{})
-	if err != nil {
-		log.Fatal(err)
-	}
 }

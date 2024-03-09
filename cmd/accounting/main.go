@@ -9,20 +9,20 @@ import (
 )
 
 var (
-	eventProducerCUD, eventProducerBE *event.EventProducer
-	eventConsumerCUD, eventConsumerBE *event.EventConsumer
+	eventProducerTaskCUD, eventProducerTrxCUD *event.EventProducer
+	eventConsumerCUD, eventConsumerBE         *event.EventConsumer
 )
 
 func main() {
 	// Запускаем http-сервер на порту 8091
-	if err := base.App.InitHTTPServer("", 8091); err != nil {
+	if err := base.App.InitHTTPServer("", 8092); err != nil {
 		log.Fatalln(err)
 	}
 
 	// Инициализируем модель данных в БД
-	// TODO: initModel()
+	initModel()
 	// Инициализируем обработчики запросов http
-	// TODO: initHandlers()
+	initHandlers()
 	// Инициализируем менеджер очередей и продюсер для событий
 	server := sysenv.GetEnvValue("RABBITMQ_SERVER", "192.168.1.99")
 	vhostName := sysenv.GetEnvValue("RABBITMQ_VHOST", "async_arch")
@@ -34,18 +34,27 @@ func main() {
 	}
 	base.App.RegisterMessageManager(manager)
 
-	eventProducerCUD, err = event.CreateEventProducer(manager, "accounting", "CUD_channel")
+	repo, _ := base.App.GetDomainRepository("accounting")
+
+	eventProducerTaskCUD, err = event.CreateEventProducer(manager, repo, "accounting", "task-streaming")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	eventProducerBE, err = event.CreateEventProducer(manager, "accounting", "BE_channel")
+	eventProducerTrxCUD, err = event.CreateEventProducer(manager, repo, "accounting", "trx-streaming")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	eventConsumerCUD = event.CreateEventConsumer(manager, "CUD_ACCOUNTING")
-	eventConsumerBE = event.CreateEventConsumer(manager, "BE_ACCOUNTING")
+	eventConsumerCUD = event.CreateEventConsumer(manager, repo, "acc-streaming")
+	eventConsumerBE = event.CreateEventConsumer(manager, repo, "acc-business-events")
+
+	// Так как ждать конца дня долго, то будем выполнять ребаланс по сообщению из очереди
+	err = base.App.Consume(manager.ID(), "rebalance-now", handleRebalanceMessage)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	initEventHandlers()
 
 	// Запускаем приложение

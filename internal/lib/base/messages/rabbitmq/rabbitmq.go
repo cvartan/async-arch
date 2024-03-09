@@ -112,7 +112,9 @@ func (man *RabbitMQManager) Consume(queueName string, handler msg.MessageHandler
 			// Читаем сообщения и запускаем их в обработку
 			case message := <-messages:
 				{
-					go handler([]byte(message.MessageId), message.Body, message.Headers)
+					// Убрал многопоточность чтения, а то сообщения идут вразнобой.
+					// TODO: добавить контекст - чтобы можно было завершать обработку
+					handler([]byte(message.MessageId), message.Body, message.Headers)
 				}
 			// Ждем сообщения о завершении и в случае чего завершаем выполнение процедуры
 			case <-consumer.cancel:
@@ -155,7 +157,7 @@ func (obj *RabbitMessageProducer) ProduceMessage(key, value []byte, headers map[
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := obj.manager.channel.PublishWithContext(ctx, obj.queue.Name, string(key), false, false, amqp.Publishing{ContentType: "application/octet-stream", MessageId: string(key), Body: value, Headers: headers}); err != nil {
+	if err := obj.manager.channel.PublishWithContext(ctx, obj.queue.Name, string(key), false, false, amqp.Publishing{ContentType: "application/json", MessageId: string(key), Body: value, Headers: headers, DeliveryMode: 2}); err != nil {
 		return err
 	} else {
 		return nil

@@ -1,3 +1,7 @@
 .vscode/launch.json
 bin/*
+cmd/auth/*.exe
+cmd/taskman/*.exe
+cmd/accounting/*.exe
+cmd/analisys/*.exe
 Makefile

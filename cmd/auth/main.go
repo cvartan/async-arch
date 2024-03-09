@@ -32,7 +32,8 @@ func main() {
 	base.App.RegisterMessageManager(manager)
 
 	// Инициализируем продюсер событий
-	eventProducer, err = event.CreateEventProducer(manager, "user-streaming", "user-streaming")
+	repo, _ := base.App.GetDomainRepository("auth")
+	eventProducer, err = event.CreateEventProducer(manager, repo, "auth", "user-streaming")
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -43,7 +43,7 @@ func (r *UserRandomizer) Len() int {
 
 // Получение идентификатора случайного пользователя
 func (r *UserRandomizer) Uuid() string {
-	if len(r.users) > 1 {
+	if len(r.users) > 0 {
 		return r.users[rand.Intn(len(r.users))]
 	}
 	return ""

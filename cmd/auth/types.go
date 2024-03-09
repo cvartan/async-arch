@@ -2,10 +2,6 @@
 
 package main
 
-import (
-	events "async-arch/internal/lib/event"
-)
-
 // CreateUserRequest - данные запроса на добавление нового пользователя
 type CreateUserRequest struct {
 	Beak     string `json:"beak"`
@@ -23,21 +19,6 @@ type UserResponse struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
 	Role  string `json:"role"`
-}
-
-// UserEventData - данные пользователя в событии
-type UserEventData struct {
-	Uuid  string `json:"uuid"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
-	Role  string `json:"role"`
-}
-
-// Event - данные события для логирования в БД
-type Event struct {
-	ID uint `gorm:"PrimaryKey"`
-	events.Event
-	UserEventData
 }
 
 // CheckResponse - данные пользователя из проверенного JWT-токена

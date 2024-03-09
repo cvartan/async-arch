@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e" pages="2">
     <diagram name="Event Storming" id="2YBvvXClWsGukQMizWep">
-        <mxGraphModel dx="9223" dy="2611" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1654" pageHeight="1169" background="#ffffff" math="0" shadow="0">
+        <mxGraphModel dx="7220" dy="3656" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" background="#ffffff" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -183,11 +183,11 @@
                 <mxCell id="5xeuYwTMl6cgXFdO7Lpt-40" value="" style="html=1;jettySize=18;whiteSpace=wrap;fontSize=13;strokeColor=#000000;strokeOpacity=100;strokeWidth=0.8;rounded=1;arcSize=12;edgeStyle=orthogonalEdgeStyle;startArrow=none;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitPerimeter=0;lucidId=Uxtd_bjRsXoG;curved=1;" parent="1" source="5xeuYwTMl6cgXFdO7Lpt-37" target="5xeuYwTMl6cgXFdO7Lpt-41" edge="1">
                     <mxGeometry width="100" height="100" relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="5xeuYwTMl6cgXFdO7Lpt-41" value="Отправить пользователю сумму выплаты" style="html=1;overflow=block;blockSpacing=1;whiteSpace=wrap;shadow=1;fontSize=20.2;fontColor=#3a414a;spacing=9;strokeColor=#000000;fillOpacity=100;fillColor=#6db1ff;strokeWidth=0;lucidId=iytdeElC.dPu;" parent="1" vertex="1">
+                <mxCell id="5xeuYwTMl6cgXFdO7Lpt-41" value="Сформировать выплату" style="html=1;overflow=block;blockSpacing=1;whiteSpace=wrap;shadow=1;fontSize=20.2;fontColor=#3a414a;spacing=9;strokeColor=#000000;fillOpacity=100;fillColor=#6db1ff;strokeWidth=0;lucidId=iytdeElC.dPu;" parent="1" vertex="1">
                     <mxGeometry x="-137" y="320" width="180" height="180" as="geometry"/>
                 </mxCell>
-                <mxCell id="5xeuYwTMl6cgXFdO7Lpt-42" value="Пользователь проинформирован о выплатах" style="html=1;overflow=block;blockSpacing=1;whiteSpace=wrap;fontSize=20;fontColor=#3a414a;spacing=9;strokeColor=#000000;fillOpacity=100;fillColor=#fc9432;strokeWidth=0;lucidId=WxtdtH3Tg~ns;" parent="1" vertex="1">
-                    <mxGeometry x="261" y="315" width="180" height="180" as="geometry"/>
+                <mxCell id="5xeuYwTMl6cgXFdO7Lpt-42" value="Выплата сформирована" style="html=1;overflow=block;blockSpacing=1;whiteSpace=wrap;fontSize=20;fontColor=#3a414a;spacing=9;strokeColor=#000000;fillOpacity=100;fillColor=#fc9432;strokeWidth=0;lucidId=WxtdtH3Tg~ns;" parent="1" vertex="1">
+                    <mxGeometry x="263" y="323" width="180" height="180" as="geometry"/>
                 </mxCell>
                 <mxCell id="5xeuYwTMl6cgXFdO7Lpt-45" value="" style="html=1;jettySize=18;whiteSpace=wrap;fontSize=13;strokeColor=#000000;strokeOpacity=100;strokeWidth=0.8;rounded=1;arcSize=12;edgeStyle=orthogonalEdgeStyle;startArrow=none;endArrow=block;endFill=1;exitX=1;exitY=0.75;lucidId=dCtdFGwSykyt;curved=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="5xeuYwTMl6cgXFdO7Lpt-37" target="5xeuYwTMl6cgXFdO7Lpt-46" edge="1">
                     <mxGeometry width="100" height="100" relative="1" as="geometry"/>
@@ -303,9 +303,6 @@
                 <mxCell id="M1-51C0g17PnLCBizvj0-10" value="Счет пользователя" style="html=1;overflow=block;blockSpacing=1;whiteSpace=wrap;shadow=1;fontSize=20.2;fontColor=#3a414a;spacing=9;strokeColor=#000000;fillColor=#FFD966;strokeWidth=0;lucidId=2ftdIzJpN.xA;" parent="1" vertex="1">
                     <mxGeometry x="-629" y="681" width="180" height="180" as="geometry"/>
                 </mxCell>
-                <mxCell id="M1-51C0g17PnLCBizvj0-11" value="Сервис нотификации пользователей" style="html=1;overflow=block;blockSpacing=1;whiteSpace=wrap;shadow=1;fontSize=20.2;fontColor=#3a414a;spacing=9;strokeColor=#000000;fillColor=#E1D5E7;strokeWidth=0;lucidId=2ftdIzJpN.xA;" parent="1" vertex="1">
-                    <mxGeometry x="62" y="315" width="180" height="180" as="geometry"/>
-                </mxCell>
                 <mxCell id="tpZmNElc4DNUiHB0oYuN-1" value="Любой пользователь" style="html=1;overflow=block;blockSpacing=1;whiteSpace=wrap;shadow=1;fontSize=20.2;fontColor=#3a414a;spacing=9;strokeColor=#000000;fillColor=#FFECA9;strokeWidth=0;lucidId=O7sduSYtx9eR;" parent="1" vertex="1">
                     <mxGeometry x="-1501" y="1274" width="180" height="180" as="geometry"/>
                 </mxCell>
@@ -336,6 +333,9 @@
                 </mxCell>
                 <mxCell id="6" value="Задача  назначена на пользователя" style="html=1;overflow=block;blockSpacing=1;whiteSpace=wrap;shadow=1;fontSize=20.2;fontColor=#3a414a;spacing=9;strokeColor=#000000;fillOpacity=100;fillColor=#fc9432;strokeWidth=0;lucidId=Z6sdp1kKHVXV;" parent="1" vertex="1">
                     <mxGeometry x="-2709" y="1741" width="180" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="9" value="Счет пользователя" style="html=1;overflow=block;blockSpacing=1;whiteSpace=wrap;shadow=1;fontSize=20.2;fontColor=#3a414a;spacing=9;strokeColor=#000000;fillColor=#FFD966;strokeWidth=0;lucidId=2ftdIzJpN.xA;" vertex="1" parent="1">
+                    <mxGeometry x="63" y="323" width="180" height="180" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
