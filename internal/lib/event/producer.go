@@ -4,7 +4,6 @@ import (
 	model "async-arch/internal/domain/event"
 	msg "async-arch/internal/lib/base/messages"
 	repo "async-arch/internal/lib/base/repository"
-	"async-arch/internal/lib/schema"
 	str "async-arch/internal/lib/stringtool"
 
 	"encoding/json"
@@ -20,7 +19,6 @@ type EventProducer struct {
 	manager    msg.MessageManager
 	repository repo.DomainRepositoryManager
 	sender     string
-	validator  schema.SchemaValidator
 }
 
 // Создание продюсера событий
@@ -51,7 +49,6 @@ func CreateEventProducer(
 		manager:    manager,
 		repository: repository,
 		sender:     sender,
-		validator:  *schema.CreateSchemaValidator(),
 	}, nil
 }
 
@@ -77,12 +74,6 @@ func (p *EventProducer) ProduceEventData(eventType model.EventType, dataID, data
 
 	var dataJson string
 	err := json.NewEncoder(str.CreateStringWriter(&dataJson)).Encode(data)
-	if err != nil {
-		return nil, err
-	}
-
-	// Валидируем сообшение
-	err = p.validator.Validate(string(eventType), eventVersion, dataJson)
 	if err != nil {
 		return nil, err
 	}
