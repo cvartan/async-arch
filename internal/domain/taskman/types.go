@@ -16,8 +16,11 @@ type User struct {
 
 // Задача
 type Task struct {
-	ID               uint   `gorm:"primaryKey"`
-	Uuid             string `gorm:"unique"`
+	ID   uint   `gorm:"primaryKey"`
+	Uuid string `gorm:"unique"`
+	// Расширили модель двумя новыми атрибутами
+	Title            string
+	JiraId           string
 	Description      string `gorm:"not null"`
 	AssignedUserUuid string `gorm:"not null"`
 	State            TaskState

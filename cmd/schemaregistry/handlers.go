@@ -8,6 +8,8 @@ import (
 	"os"
 )
 
+// Получение схемы для события и версии события
+// Файл со схемой расположен на диске
 func handleGetSchema(w http.ResponseWriter, r *http.Request) {
 
 	eventType := r.PathValue("event")

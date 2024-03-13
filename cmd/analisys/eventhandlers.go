@@ -19,6 +19,7 @@ func initEventHandlers() {
 	eventConsumerCUD.Consume()
 }
 
+// Обработка события добавления нового пользователя
 func handleUserCreateEvent(event *events.Event, data interface{}) {
 	log.Printf("Event %s(id=\"%s\",dataid=\"%s\") received\n", event.EventType, event.EventID, event.DataID)
 
@@ -42,6 +43,7 @@ func handleUserCreateEvent(event *events.Event, data interface{}) {
 	log.Printf("Event %s(id=\"%s\") catched\n", event.EventType, event.EventID)
 }
 
+// Обработка события создания новой задачи
 func handleTaskCreateEvent(event *events.Event, data interface{}) {
 	log.Printf("Event %s(id=\"%s\",dataid=\"%s\") received\n", event.EventType, event.EventID, event.DataID)
 
@@ -64,6 +66,8 @@ func handleTaskCreateEvent(event *events.Event, data interface{}) {
 	log.Printf("Event %s(id=\"%s\") catched\n", event.EventType, event.EventID)
 }
 
+// Обработка события обновления задачи
+// Также тут происходит обновление события формируемого в сервисе аккаунтинга после назначения цен
 func handleTaskUpdateEvent(event *events.Event, data interface{}) {
 	log.Printf("Event %s(id=\"%s\",dataid=\"%s\") received\n", event.EventType, event.EventID, event.DataID)
 
@@ -98,6 +102,7 @@ func handleTaskUpdateEvent(event *events.Event, data interface{}) {
 	log.Printf("Event %s(id=\"%s\") catched\n", event.EventType, event.EventID)
 }
 
+// Обработка события создания новой транзакции
 func handleTransactionCreateEvent(event *events.Event, data interface{}) {
 	log.Printf("Event %s(id=\"%s\",dataid=\"%s\") received\n", event.EventType, event.EventID, event.DataID)
 

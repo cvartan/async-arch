@@ -30,6 +30,7 @@ where t.user_uuid = ? and date_trunc('day',t."time") = current_date
 order by t."time"
 `
 
+// Получение баланса и лога операций для пользователя
 func handleGetLog(w http.ResponseWriter, r *http.Request) {
 
 	userUuid := r.Header.Get("X-Auth-User-UUID")
@@ -97,6 +98,7 @@ select
 	(select sum(t.value) from accounting."transaction" t where t."type" = 'VALUE' and date_trunc('day',t."time")=current_date) value_sum 
 `
 
+// Получение суммы заработанной менеджментом
 func handleGetStat(w http.ResponseWriter, h *http.Request) {
 	repo, _ := base.App.GetDomainRepository("accounting")
 

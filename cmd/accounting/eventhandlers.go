@@ -74,8 +74,9 @@ func handleTaskCreateEvent(event *events.Event, data interface{}) {
 
 	taskData.AssignmentTaskPrice = task.AssignmentTaskPrice
 	taskData.CompletedTaskPrice = task.CompleteTaskPrice
+	taskData.State = "ACTIVE"
 
-	_, err = eventProducerTaskCUD.ProduceEventData(eventmodel.ACC_CUD_TASK_PRICED, task.Uuid, reflect.TypeOf(*task).String(), taskData, "1")
+	_, err = eventProducerTaskCUD.ProduceEventData(eventmodel.ACC_CUD_TASK_PRICED, task.Uuid, reflect.TypeOf(*task).String(), taskData, "1", nil)
 	if err != nil {
 		log.Fatalf("(dataid=%s) %v\n", event.DataID, err)
 	}
@@ -133,7 +134,7 @@ func handleTaskAssignedEvent(event *events.Event, data interface{}) {
 		Value:          trx.Value,
 	}
 
-	_, err = eventProducerTrxCUD.ProduceEventData(eventmodel.ACC_CUD_TRX_CREATED, trx.Uuid, reflect.TypeOf(*trx).String(), trxEventData, "1")
+	_, err = eventProducerTrxCUD.ProduceEventData(eventmodel.ACC_CUD_TRX_CREATED, trx.Uuid, reflect.TypeOf(*trx).String(), trxEventData, "1", nil)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -184,7 +185,7 @@ func handleTaskCompletedEvent(event *events.Event, data interface{}) {
 		Value:          trx.Value,
 	}
 
-	_, err = eventProducerTrxCUD.ProduceEventData(eventmodel.ACC_CUD_TRX_CREATED, trx.Uuid, reflect.TypeOf(*trx).String(), trxEventData, "")
+	_, err = eventProducerTrxCUD.ProduceEventData(eventmodel.ACC_CUD_TRX_CREATED, trx.Uuid, reflect.TypeOf(*trx).String(), trxEventData, "1", nil)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -279,7 +280,7 @@ func handleRebalanceMessage(key, value []byte, headers map[string]interface{}) {
 				Value:          trx.Value,
 			}
 
-			_, err = eventProducerTrxCUD.ProduceEventData(eventmodel.ACC_CUD_TRX_CREATED, trx.Uuid, reflect.TypeOf(*trx).String(), trxEventData, "1")
+			_, err = eventProducerTrxCUD.ProduceEventData(eventmodel.ACC_CUD_TRX_CREATED, trx.Uuid, reflect.TypeOf(*trx).String(), trxEventData, "1", nil)
 			if err != nil {
 				log.Fatalln(err)
 			}

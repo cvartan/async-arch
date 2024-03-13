@@ -2,7 +2,10 @@ package event
 
 // Данные задачи для бизнес-события
 type TaskEventData struct {
-	Uuid             string `json:"uuid"`
+	Uuid string `json:"uuid"`
+	// Расширили модель двумя новыми атрибутами
+	Title            string `json:"title"`
+	JiraId           string `json:"jira-id"`
 	Description      string `json:"description"`
 	AssignedUserUuid string `json:"assignedUserUuid"`
 }

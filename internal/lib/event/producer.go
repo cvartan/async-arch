@@ -20,7 +20,7 @@ type EventProducer struct {
 	manager    msg.MessageManager
 	repository repo.DomainRepositoryManager
 	sender     string
-	validator  schema.SchemaValidator
+	validator  schema.SchemaValidator //Добавлен валидатор схем при отправке
 }
 
 // Создание продюсера событий
@@ -56,7 +56,15 @@ func CreateEventProducer(
 }
 
 // Отправка события
-func (p *EventProducer) ProduceEventData(eventType model.EventType, dataID, dataType string, data interface{}, eventVersion string) (*Event, error) {
+func (p *EventProducer) ProduceEventData(
+	eventType model.EventType, dataID, dataType string,
+	data interface{},
+	eventVersion string,
+	checkVersions []string,
+) (
+	*Event,
+	error,
+) {
 	evnt := Event{
 		EventID:   uuid.NewString(),
 		EventType: eventType,
@@ -81,10 +89,17 @@ func (p *EventProducer) ProduceEventData(eventType model.EventType, dataID, data
 		return nil, err
 	}
 
-	// Валидируем сообшение
-	err = p.validator.Validate(string(eventType), eventVersion, dataJson)
-	if err != nil {
-		return nil, err
+	// Будем проверять совместимость с предыдущим версиями
+	if checkVersions != nil {
+		if len(checkVersions) > 0 {
+			// Валидируем сообшение
+			for _, version := range checkVersions {
+				err = p.validator.Validate(string(eventType), version, dataJson)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
 	}
 
 	producer, _ := p.manager.GetProducer(p.producerId)

@@ -49,7 +49,7 @@ func main() {
 	eventConsumerCUD = event.CreateEventConsumer(manager, repo, "acc-streaming")
 	eventConsumerBE = event.CreateEventConsumer(manager, repo, "acc-business-events")
 
-	// Так как ждать конца дня долго, то будем выполнять ребаланс по сообщению из очереди
+	// Так как ждать конца дня долго, то будем выполнять ребаланс по сообщению из очереди (куда сами сообщение и кидаем)
 	err = base.App.Consume(manager.ID(), "rebalance-now", handleRebalanceMessage)
 	if err != nil {
 		log.Fatalln(err)

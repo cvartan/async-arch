@@ -97,7 +97,7 @@ func handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		Email: user.EMail,
 		Role:  string(user.Role),
 	}
-	_, err = eventProducer.ProduceEventData(eventmodel.AUTH_CUD_USER_CREATED, user.Uuid, reflect.TypeOf(*user).String(), eventData, "1")
+	_, err = eventProducer.ProduceEventData(eventmodel.AUTH_CUD_USER_CREATED, user.Uuid, reflect.TypeOf(*user).String(), eventData, "1", nil)
 	if err != nil {
 		log.Fatal(err)
 	}

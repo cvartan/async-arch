@@ -16,12 +16,14 @@ type EventSchemaKey struct {
 	EventVersion string
 }
 
+// Валидатор схем
 type SchemaValidator struct {
 	schemaService     *http.Client
 	schemaServiceAddr string
 	schemaCache       map[EventSchemaKey]*jsonschema.Schema
 }
 
+// Создание валидатора схем с нужными параметрами
 func CreateSchemaValidator() *SchemaValidator {
 	return &SchemaValidator{
 		schemaService: &http.Client{},
@@ -34,24 +36,28 @@ func CreateSchemaValidator() *SchemaValidator {
 	}
 }
 
+// Валидация схемы события (данных события)
 func (v *SchemaValidator) Validate(eventType, eventVersion, jsonObject string) error {
 	var (
 		schema *jsonschema.Schema
 		ok     bool
 	)
 
+	// Ищем схему для этого события в кэше
 	schema, ok = v.schemaCache[EventSchemaKey{
 		EventType:    eventType,
 		EventVersion: eventVersion,
 	}]
 	if !ok {
-		// Если схему не нашли, то добавляем запрашиваем ее в сервисе ServiceRegistry
+		// Если схему не нашли, то запрашиваем ее в сервисе ServiceRegistry
 		req, err := http.NewRequest("GET", fmt.Sprintf(
 			"%s/api/v1/schema/%s/%s",
 			v.schemaServiceAddr,
 			eventType,
 			eventVersion,
 		), nil)
+
+		// Если схему не удалось получить то возвращаем ошибку
 		if err != nil {
 			return err
 		}
@@ -74,6 +80,7 @@ func (v *SchemaValidator) Validate(eventType, eventVersion, jsonObject string) e
 		if err != nil {
 			return err
 		}
+		// Добавляем в кэш для последующего использования
 		v.schemaCache[EventSchemaKey{
 			EventType:    eventType,
 			EventVersion: eventVersion,
@@ -84,5 +91,6 @@ func (v *SchemaValidator) Validate(eventType, eventVersion, jsonObject string) e
 	if err != nil {
 		return err
 	}
+	// Вовзращаем результат валидации
 	return schema.Validate(object)
 }

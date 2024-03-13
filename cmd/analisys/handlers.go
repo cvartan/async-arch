@@ -32,6 +32,7 @@ select
 	(select sum(t.value) from analisys."transaction" t where t."type" = 'VALUE' and date_trunc('day',t."time")=current_date and t.user_uuid = ?) value_sum 
 `
 
+// Получение отчета по зарабтокам менеджмента и попугам ушедших в минус
 func handleGetUserStatRequest(w http.ResponseWriter, r *http.Request) {
 	repo, _ := base.App.GetDomainRepository("analisys")
 
@@ -143,6 +144,7 @@ from analisys.task t
 where t.is_complete = true and t.complete_time between ? and ?
 `
 
+// Получение отчета по самым дорогим завершенным задачам
 func handleGetTaskStatRequest(w http.ResponseWriter, r *http.Request) {
 	periodDates := r.URL.Query()
 	dateFrom := time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)

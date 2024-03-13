@@ -13,6 +13,9 @@ func init() {
 	eventSchemaRepo = make(map[EventSchemaKey]string)
 }
 
+// Загружаем каталог схем
+// Для простоты - добавление новой схемы выполняется вручную в файл repository.json
+// После добавления требуется перезапуск сервиса
 func initSchemaRepo() {
 	repoFileName := fmt.Sprintf("%s/repository.json", schemaRepositoryPath)
 

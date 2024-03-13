@@ -15,6 +15,7 @@ import (
 	"log"
 	"net/http"
 	"reflect"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -22,7 +23,15 @@ import (
 // Инициализация обработчиков
 func initHandlers() {
 	base.App.HandleFunc("POST /api/v1/tasks", authtool.WithAuth(handleCreateTask, nil))
-	base.App.HandleFunc("POST /api/v1/tasks/reassign", authtool.WithAuth(handleReassignTask, []authmodel.UserRole{authmodel.ADMIN, authmodel.MANAGER}))
+	base.App.HandleFunc(
+		"POST /api/v1/tasks/reassign",
+		authtool.WithAuth(handleReassignTask,
+			[]authmodel.UserRole{
+				authmodel.ADMIN,
+				authmodel.MANAGER,
+			},
+		),
+	)
 	base.App.HandleFunc("POST /api/v1/tasks/{id}/complete", authtool.WithAuth(handleCompleteTask, nil))
 	base.App.HandleFunc("GET /api/v1/tasks", authtool.WithAuth(handleGetUserTasks, nil))
 }
@@ -36,8 +45,18 @@ func handleCreateTask(w http.ResponseWriter, r *http.Request) {
 		httptool.SetStatus500(w, err)
 		return
 	}
+
+	// Делаем проверку, что в заголовке задачи нет указания на JiraId - то есть остутствуют символы []
+
+	if strings.Contains(taskRq.Title, "[") && strings.Contains(taskRq.Title, "]") {
+		httptool.SetStatus500(w, errors.New("jiraId is not allowed in task title"))
+		return
+	}
+
 	task := &model.Task{
 		Uuid:        uuid.NewString(),
+		Title:       taskRq.Title,
+		JiraId:      taskRq.JiraId,
 		Description: taskRq.Description,
 		State:       model.TASK_ACTIVE,
 	}
@@ -63,6 +82,8 @@ func handleCreateTask(w http.ResponseWriter, r *http.Request) {
 	taskResp := &TaskResponse{
 		ID:          task.ID,
 		Uuid:        task.Uuid,
+		Title:       task.Title,
+		JiraId:      task.JiraId,
 		Description: task.Description,
 		UserUuid:    task.AssignedUserUuid,
 		State:       task.State,
@@ -79,6 +100,8 @@ func handleCreateTask(w http.ResponseWriter, r *http.Request) {
 	// Отправляем CUD событие добавления задачи в очередь CUD-событий
 	eventData := eventmodel.TaskEventData{
 		Uuid:             task.Uuid,
+		Title:            task.Title,
+		JiraId:           task.JiraId,
 		Description:      task.Description,
 		AssignedUserUuid: task.AssignedUserUuid,
 	}
@@ -88,19 +111,19 @@ func handleCreateTask(w http.ResponseWriter, r *http.Request) {
 		State:         string(task.State),
 	}
 
-	_, err = eventProducerCUD.ProduceEventData(eventmodel.TASK_CUD_TASK_CREATED, task.Uuid, reflect.TypeOf(*task).String(), eventStreamData, "1")
+	_, err = eventProducerCUD.ProduceEventData(eventmodel.TASK_CUD_TASK_CREATED, task.Uuid, reflect.TypeOf(*task).String(), eventStreamData, "2", []string{"1"})
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Отправляем BE событие добавления задачи в очередь BE-событий
-	_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_CREATED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "1")
+	_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_CREATED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "2", []string{"1"})
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Отправляем BE событие назначения задачи в очередь BE-событий
-	_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_ASSIGNED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "1")
+	_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_ASSIGNED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "2", []string{"1"})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -156,6 +179,8 @@ func handleReassignTask(w http.ResponseWriter, r *http.Request) {
 			// Теперь отсылаем CUD событие изменения задачи
 			eventData := eventmodel.TaskEventData{
 				Uuid:             task.Uuid,
+				Title:            task.Title,
+				JiraId:           task.JiraId,
 				Description:      task.Description,
 				AssignedUserUuid: task.AssignedUserUuid,
 			}
@@ -165,13 +190,13 @@ func handleReassignTask(w http.ResponseWriter, r *http.Request) {
 				State:         string(task.State),
 			}
 
-			_, err = eventProducerCUD.ProduceEventData(eventmodel.TASK_CUD_TASK_UPDATED, task.Uuid, reflect.TypeOf(*task).String(), eventStreamData, "1")
+			_, err = eventProducerCUD.ProduceEventData(eventmodel.TASK_CUD_TASK_UPDATED, task.Uuid, reflect.TypeOf(*task).String(), eventStreamData, "2", []string{"1"})
 			if err != nil {
 				log.Fatal(err)
 			}
 
 			// Отправляем BEсобытие изменения пользователя задачи в очередь BE-событий
-			_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_ASSIGNED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "1")
+			_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_ASSIGNED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "2", []string{"1"})
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -222,6 +247,8 @@ func handleCompleteTask(w http.ResponseWriter, r *http.Request) {
 	taskResp := &TaskResponse{
 		ID:          task.ID,
 		Uuid:        task.Uuid,
+		Title:       task.Title,
+		JiraId:      task.JiraId,
 		Description: task.Description,
 		UserUuid:    task.AssignedUserUuid,
 		State:       task.State,
@@ -245,13 +272,13 @@ func handleCompleteTask(w http.ResponseWriter, r *http.Request) {
 		State:         string(task.State),
 	}
 
-	_, err = eventProducerCUD.ProduceEventData(eventmodel.TASK_CUD_TASK_UPDATED, task.Uuid, reflect.TypeOf(*task).String(), eventStreamData, "1")
+	_, err = eventProducerCUD.ProduceEventData(eventmodel.TASK_CUD_TASK_UPDATED, task.Uuid, reflect.TypeOf(*task).String(), eventStreamData, "2", []string{"1"})
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Отправляем BEсобытие закрытия задачи в очередь BE-событий
-	_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_COMPLETED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "1")
+	_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_COMPLETED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "2", []string{"1"})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -281,6 +308,8 @@ func handleGetUserTasks(w http.ResponseWriter, r *http.Request) {
 		tasks = append(tasks, TaskResponse{
 			ID:          task.ID,
 			Uuid:        task.Uuid,
+			Title:       task.Title,
+			JiraId:      task.JiraId,
 			Description: task.Description,
 			UserUuid:    task.AssignedUserUuid,
 			State:       task.State,
