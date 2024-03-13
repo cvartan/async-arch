@@ -45,7 +45,14 @@ func (app *serviceApplication) RegisterMessageManager(manager msg.MessageManager
 }
 
 // RegisterMessageProducer - метод регистрации нового публикатора сообщений
-func (app *serviceApplication) RegisterMessageProducer(managerId, producerId string, queueName string) (msg.MessageProducer, error) {
+func (app *serviceApplication) RegisterMessageProducer(
+	managerId,
+	producerId string,
+	queueName string,
+) (
+	msg.MessageProducer,
+	error,
+) {
 
 	if managerId == "" {
 		return nil, errors.New("необходимо указать имя используемого менеджера очередей")
@@ -78,7 +85,13 @@ func (app *serviceApplication) RegisterMessageProducer(managerId, producerId str
 }
 
 // SendMsg - метод отправки сообщений через укзанного публикатора сообщений
-func (app *serviceApplication) ProduceMessage(managerId, producerId string, key []byte, value []byte, headers map[string]interface{}) error {
+func (app *serviceApplication) ProduceMessage(
+	managerId,
+	producerId string,
+	key []byte,
+	value []byte,
+	headers map[string]interface{},
+) error {
 	if managerId == "" {
 		return errors.New("необходимо указать имя используемого менеджера очередей")
 	}
@@ -105,7 +118,13 @@ func (app *serviceApplication) ProduceMessage(managerId, producerId string, key 
 }
 
 // SendStrMsg - метод отправки сообщений в строковом формате через указанного публикатора сообщений
-func (app *serviceApplication) ProduceStringMessage(managerId, producerId string, key string, value string, headers map[string]interface{}) error {
+func (app *serviceApplication) ProduceStringMessage(
+	managerId,
+	producerId string,
+	key string,
+	value string,
+	headers map[string]interface{},
+) error {
 	return app.ProduceMessage(managerId, producerId, []byte(key), []byte(value), headers)
 }
 
@@ -255,7 +274,17 @@ func (app *serviceApplication) AddDeleteRequest(requestId, serverAddr, methodUrl
 }
 
 // Request - выполнение запроса HTTP по шаблону
-func (app *serviceApplication) Request(requestId string, body []byte, params, query map[string]interface{}, headers map[string]string, cookies []HttpCookie) (*http.Response, error) {
+func (app *serviceApplication) Request(
+	requestId string,
+	body []byte,
+	params,
+	query map[string]interface{},
+	headers map[string]string,
+	cookies []HttpCookie,
+) (
+	*http.Response,
+	error,
+) {
 	c, ok := app.httpClients[requestId]
 	if !ok {
 		return nil, errors.New("шаблон запроса с таким идентификатором не найден")
