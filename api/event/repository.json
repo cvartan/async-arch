@@ -38,5 +38,30 @@
         "event":"ACC.TRANSACTION.CREATED",
         "version":"1",
         "path":"json/accounting/1/transaction.json"
+    },
+    {
+        "event":"TASK.TASK.CREATED",
+        "version":"2",
+        "path":"json/task/2/task-streaming.json"
+    },
+    {
+        "event":"TASK.TASK.UPDATED",
+        "version":"2",
+        "path":"json/task/2/task-streaming.json"
+    },
+    {
+        "event":"TASK_CREATED",
+        "version":"2",
+        "path":"json/task/2/task-business.json"
+    },
+    {
+        "event":"TASK_ASSIGNED",
+        "version":"2",
+        "path":"json/task/2/task-business.json"
+    },
+    {
+        "event":"TASK_COMPLETED",
+        "version":"2",
+        "path":"json/task/2/task-business.json"
     }
 ]
