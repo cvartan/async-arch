@@ -1,0 +1,24 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Task business event  data",
+    "type":"object",
+    "properties": {
+        "uuid":{
+            "description": "Уникальный идентификатор объекта - Задача",
+            "type":"string"
+        },
+        "title":{
+            "description": "Заголовок задачи",
+            "type":"string"
+        },
+        "description":{
+            "description": "Описание задачи",
+            "type":"string"
+        },
+        "assignedUserUuid":{
+            "description": "Уникальный идентфиикатор пользователя, на которого назначена задача",
+            "type":"string"
+        }
+    },
+    "required":["uuid","assignedUserUuid","title"]
+}

@@ -4,6 +4,7 @@ import (
 	model "async-arch/internal/domain/event"
 	msg "async-arch/internal/lib/base/messages"
 	repo "async-arch/internal/lib/base/repository"
+	"async-arch/internal/lib/schema"
 	str "async-arch/internal/lib/stringtool"
 
 	"encoding/json"
@@ -19,6 +20,7 @@ type EventProducer struct {
 	manager    msg.MessageManager
 	repository repo.DomainRepositoryManager
 	sender     string
+	validator  schema.SchemaValidator //Добавлен валидатор схем при отправке
 }
 
 // Создание продюсера событий
@@ -49,11 +51,20 @@ func CreateEventProducer(
 		manager:    manager,
 		repository: repository,
 		sender:     sender,
+		validator:  *schema.CreateSchemaValidator(),
 	}, nil
 }
 
 // Отправка события
-func (p *EventProducer) ProduceEventData(eventType model.EventType, dataID, dataType string, data interface{}, eventVersion string) (*Event, error) {
+func (p *EventProducer) ProduceEventData(
+	eventType model.EventType, dataID, dataType string,
+	data interface{},
+	eventVersion string,
+	checkVersions []string,
+) (
+	*Event,
+	error,
+) {
 	evnt := Event{
 		EventID:   uuid.NewString(),
 		EventType: eventType,
@@ -76,6 +87,19 @@ func (p *EventProducer) ProduceEventData(eventType model.EventType, dataID, data
 	err := json.NewEncoder(str.CreateStringWriter(&dataJson)).Encode(data)
 	if err != nil {
 		return nil, err
+	}
+
+	// Будем проверять совместимость с предыдущим версиями
+	if checkVersions != nil {
+		if len(checkVersions) > 0 {
+			// Валидируем сообшение
+			for _, version := range checkVersions {
+				err = p.validator.Validate(string(eventType), version, dataJson)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
 	}
 
 	producer, _ := p.manager.GetProducer(p.producerId)

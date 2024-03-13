@@ -1,0 +1,39 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Task with prices streaming data",
+    "type": "object",
+    "properties": {
+        "uuid": {
+            "description": "Уникальный идентификатор объекта - Задача",
+            "type": "string"
+        },
+        "description": {
+            "description": "Описание задачи",
+            "type": "string"
+        },
+        "assignedUserUuid": {
+            "description": "Уникальный идентфиикатор пользователя, на которого назначена задача",
+            "type": "string"
+        },
+        "state":{
+            "description": "Состояние задачи",
+            "type":"string",
+            "enum":["ACTIVE","COMPLETED"]
+        },
+        "assignedPrice":{
+            "description": "Цена списания денег при назначении задачи на пользователя",
+            "type":"integer",
+            "minimum": 0
+        },
+        "completedPrice":{
+            "description": "Цена зачисления денег при выполнении задачи",
+            "type":"integer",
+            "minimum": 0
+        }
+    },
+    "required": [
+        "uuid",
+        "assignedPrice",
+        "completedPrice"
+    ]
+}
