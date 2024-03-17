@@ -7,6 +7,9 @@ const (
 	TASK_BE_TASK_CREATED   EventType = "TASK_CREATED"
 	TASK_BE_TASK_ASSIGNED  EventType = "TASK_ASSIGNED"
 	TASK_BE_TASK_COMPLETED EventType = "TASK_COMPLETED"
+	ACC_BE_DEBITING        EventType = "DEBITING"
+	ACC_BE_VALUE           EventType = "VALUE"
+	ACC_BE_PAYOFF          EventType = "PAYOFF"
 
 	// Называем по шаблону ДОМЕН.СУЩНОСТЬ.ВЫПОЛНЕННОЕ ДЕЙСТВИЕ
 	AUTH_CUD_USER_CREATED EventType = "AUTH.USER.CREATED"

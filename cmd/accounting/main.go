@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	eventProducerTaskCUD, eventProducerTrxCUD *event.EventProducer
-	eventConsumerCUD, eventConsumerBE         *event.EventConsumer
+	eventProducerTaskCUD, eventProducerTrxCUD, eventProducerTrxBE *event.EventProducer
+	eventConsumerCUD, eventConsumerBE                             *event.EventConsumer
 )
 
 func main() {
@@ -35,6 +35,11 @@ func main() {
 	base.App.RegisterMessageManager(manager)
 
 	repo, _ := base.App.GetDomainRepository("accounting")
+
+	eventProducerTrxBE, err = event.CreateEventProducer(manager, repo, "accounting", "account-lifecycle-log")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	eventProducerTaskCUD, err = event.CreateEventProducer(manager, repo, "accounting", "task-streaming")
 	if err != nil {

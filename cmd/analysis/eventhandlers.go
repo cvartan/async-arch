@@ -17,6 +17,9 @@ func initEventHandlers() {
 	eventConsumerCUD.AddConsumedEvent(eventmodel.ACC_CUD_TASK_PRICED, "1", handleTaskUpdateEvent)
 	eventConsumerCUD.AddConsumedEvent(eventmodel.ACC_CUD_TRX_CREATED, "1", handleTransactionCreateEvent)
 	eventConsumerCUD.Consume()
+
+	eventConsumerBE.AddConsumedEvent("", "", handleBusinessEvents)
+	eventConsumerBE.Consume()
 }
 
 // Обработка события добавления нового пользователя
@@ -34,7 +37,7 @@ func handleUserCreateEvent(event *events.Event, data interface{}) {
 		Name: userData.Name,
 	}
 
-	repo, _ := base.App.GetDomainRepository("analisys")
+	repo, _ := base.App.GetDomainRepository("analysis")
 	err = repo.Append(user)
 	if err != nil {
 		log.Fatalln(err)
@@ -57,7 +60,7 @@ func handleTaskCreateEvent(event *events.Event, data interface{}) {
 		Uuid: taskData.Uuid,
 	}
 
-	repo, _ := base.App.GetDomainRepository("analisys")
+	repo, _ := base.App.GetDomainRepository("analysis")
 	err = repo.Append(task)
 	if err != nil {
 		log.Fatalln(err)
@@ -79,7 +82,7 @@ func handleTaskUpdateEvent(event *events.Event, data interface{}) {
 
 	task := &model.Task{}
 
-	repo, _ := base.App.GetDomainRepository("analisys")
+	repo, _ := base.App.GetDomainRepository("analysis")
 	err = repo.Get(task, map[string]interface{}{"uuid": taskData.Uuid})
 	if err != nil {
 		log.Fatalln(err)
@@ -120,8 +123,30 @@ func handleTransactionCreateEvent(event *events.Event, data interface{}) {
 		Value:    trxData.Value,
 	}
 
-	repo, _ := base.App.GetDomainRepository("analisys")
+	repo, _ := base.App.GetDomainRepository("analysis")
 	err = repo.Append(trx)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	log.Printf("Event %s(id=\"%s\") catched\n", event.EventType, event.EventID)
+}
+
+// Получение бизнес-событий (храним в неразобранном виде)
+func handleBusinessEvents(event *events.Event, data interface{}) {
+	log.Printf("Event %s(id=\"%s\",dataid=\"%s\") received\n", event.EventType, event.EventID, event.DataID)
+	businessEvent := &model.BusinessEvent{
+		Uuid:      event.EventID,
+		EventType: string(event.EventType),
+		Time:      event.CreatedAt,
+		DataType:  event.Subject,
+		DataUuid:  event.DataID,
+		Sender:    event.Sender,
+		Data:      string(data.([]byte)),
+	}
+
+	repo, _ := base.App.GetDomainRepository("analysis")
+	err := repo.Append(businessEvent)
 	if err != nil {
 		log.Fatalln(err)
 	}
