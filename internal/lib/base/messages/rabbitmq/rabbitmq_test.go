@@ -17,7 +17,7 @@ func CatchMessage(key, value []byte, headers map[string]interface{}) {
 func TestRabbitMQ(t *testing.T) {
 	result = make(chan string)
 
-	serverAddr := sysenv.GetEnvValue("RABBITMQ_SERVER", "192.168.1.99")
+	serverAddr := sysenv.GetEnvValue("RABBITMQ_SERVER", "localhost")
 	vhostName := sysenv.GetEnvValue("RABBITMQ_VHOST", "async_arch")
 
 	manager, err := mq.CreateRabbitMQManager("test", "asyncarch", "password", serverAddr, vhostName, mq.DEFAULT_PORT)
