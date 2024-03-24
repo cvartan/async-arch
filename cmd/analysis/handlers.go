@@ -34,7 +34,7 @@ select
 
 // Получение отчета по зарабтокам менеджмента и попугам ушедших в минус
 func handleGetUserStatRequest(w http.ResponseWriter, r *http.Request) {
-	repo, _ := base.App.GetDomainRepository("analisys")
+	repo, _ := base.App.GetDomainRepository("analysis")
 
 	result, err := repo.RawQuery(getUserListQueryTemplate)
 	if err != nil {
@@ -169,7 +169,7 @@ func handleGetTaskStatRequest(w http.ResponseWriter, r *http.Request) {
 		dateTo = dateTo.Add(time.Hour * 24)
 	}
 
-	repo, _ := base.App.GetDomainRepository("analisys")
+	repo, _ := base.App.GetDomainRepository("analysis")
 	result, err := repo.RawQuery(MaxPriceByDaysQueryTemplate, dateFrom, dateTo)
 	if err != nil {
 		httptool.SetStatus500(w, err)

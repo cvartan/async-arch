@@ -15,13 +15,13 @@ func initModel() {
 	dbname := "async-arch"
 	user := "async-arch"
 	password := "password"
-	scheme := "analisys"
+	scheme := "analysis"
 
 	domainRepo, err := repo.CreateDomainRepository(host, dbname, scheme, user, password)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	base.App.RegisterDomainRepository("analisys", domainRepo)
+	base.App.RegisterDomainRepository("analysis", domainRepo)
 
 	_, err = domainRepo.CreateObjectRepository(&model.Task{})
 	if err != nil {

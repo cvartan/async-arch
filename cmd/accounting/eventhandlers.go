@@ -52,6 +52,10 @@ func handleUserCreatedEvent(event *events.Event, data interface{}) {
 }
 
 // Обработчик бизнес-события добавления новой задачи
+/*
+	Добавляем списание средств с пользователя после формирования цены
+	TODO: когда-нибудь вынести бизнес-логику в отдельную обработку, чтобы не было дублирования операций
+*/
 func handleTaskCreateEvent(event *events.Event, data interface{}) {
 	log.Printf("Event %s(id=\"%s\",dataid=\"%s\") received\n", event.EventType, event.EventID, event.DataID)
 	// Получаем тело соообщения с событием
@@ -70,15 +74,47 @@ func handleTaskCreateEvent(event *events.Event, data interface{}) {
 	}
 
 	repo, _ := base.App.GetDomainRepository("accounting")
-	repo.Append(task)
 
 	taskData.AssignmentTaskPrice = task.AssignmentTaskPrice
 	taskData.CompletedTaskPrice = task.CompleteTaskPrice
 	taskData.State = "ACTIVE"
 
+	// Выполняем списание денег с назначенного пользователя
+
+	trx := &model.Transaction{
+		Uuid:     uuid.NewString(),
+		Type:     model.DEBITING,
+		Time:     time.Now(),
+		UserUuid: task.AssignedUserUuid,
+		TaskUuid: task.Uuid,
+		Value:    task.AssignmentTaskPrice,
+	}
+
+	repo.Append(task)
+	repo.Append(trx)
+
+	trxData := &eventmodel.TransactionEventData{
+		Uuid:           trx.Uuid,
+		Type:           string(trx.Type),
+		Time:           trx.Time,
+		LinkedUserUuid: trx.UserUuid,
+		LinkedTaskUuid: trx.TaskUuid,
+		Value:          trx.Value,
+	}
+
 	_, err = eventProducerTaskCUD.ProduceEventData(eventmodel.ACC_CUD_TASK_PRICED, task.Uuid, reflect.TypeOf(*task).String(), taskData, "1", nil)
 	if err != nil {
-		log.Fatalf("(dataid=%s) %v\n", event.DataID, err)
+		log.Fatalf("event %s (dataid=%s) %v\n", eventmodel.ACC_CUD_TASK_PRICED, event.DataID, err)
+	}
+
+	_, err = eventProducerTaskCUD.ProduceEventData(eventmodel.ACC_CUD_TRX_CREATED, trx.Uuid, reflect.TypeOf(*trx).String(), trxData, "1", nil)
+	if err != nil {
+		log.Fatalf("event %s (dataid=%s) %v\n", eventmodel.ACC_CUD_TRX_CREATED, event.DataID, err)
+	}
+
+	_, err = eventProducerTrxBE.ProduceEventData(eventmodel.ACC_BE_DEBITING, trx.Uuid, reflect.TypeOf(*trx).String(), trxData, "1", nil)
+	if err != nil {
+		log.Fatalf("event %s (dataid=%s) %v\n", eventmodel.ACC_BE_DEBITING, event.DataID, err)
 	}
 
 	log.Printf("Event %s(id=\"%s\") catched\n", event.EventType, event.EventID)
@@ -139,6 +175,12 @@ func handleTaskAssignedEvent(event *events.Event, data interface{}) {
 		log.Fatalln(err)
 	}
 
+	// Генерим бизнес-событие по транзакции списания
+	_, err = eventProducerTrxBE.ProduceEventData(eventmodel.ACC_BE_DEBITING, trx.Uuid, reflect.TypeOf(*trx).String(), trxEventData, "1", nil)
+	if err != nil {
+		log.Fatalf("event %s (dataid=%s) %v\n", eventmodel.ACC_BE_DEBITING, event.DataID, err)
+	}
+
 	log.Printf("Event %s(id=\"%s\") catched\n", event.EventType, event.EventID)
 }
 
@@ -188,6 +230,12 @@ func handleTaskCompletedEvent(event *events.Event, data interface{}) {
 	_, err = eventProducerTrxCUD.ProduceEventData(eventmodel.ACC_CUD_TRX_CREATED, trx.Uuid, reflect.TypeOf(*trx).String(), trxEventData, "1", nil)
 	if err != nil {
 		log.Fatalln(err)
+	}
+
+	// Генерим бизнес-событие по транзакции ззачисления
+	_, err = eventProducerTrxBE.ProduceEventData(eventmodel.ACC_BE_VALUE, trx.Uuid, reflect.TypeOf(*trx).String(), trxEventData, "1", nil)
+	if err != nil {
+		log.Fatalf("event %s (dataid=%s) %v\n", eventmodel.ACC_BE_VALUE, event.DataID, err)
 	}
 
 	log.Printf("Event %s(id=\"%s\") catched\n", event.EventType, event.EventID)
@@ -281,6 +329,12 @@ func handleRebalanceMessage(key, value []byte, headers map[string]interface{}) {
 			}
 
 			_, err = eventProducerTrxCUD.ProduceEventData(eventmodel.ACC_CUD_TRX_CREATED, trx.Uuid, reflect.TypeOf(*trx).String(), trxEventData, "1", nil)
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			// Генерим бизнес-событие по транзакции выплаты
+			_, err = eventProducerTrxBE.ProduceEventData(eventmodel.ACC_BE_PAYOFF, trx.Uuid, reflect.TypeOf(*trx).String(), trxEventData, "1", nil)
 			if err != nil {
 				log.Fatalln(err)
 			}
