@@ -122,11 +122,13 @@ func handleCreateTask(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	// Отправляем BE событие назначения задачи в очередь BE-событий
-	_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_ASSIGNED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "2", []string{"1"})
-	if err != nil {
-		log.Fatal(err)
-	}
+	// BE-событие назначения задачи при создании не отправляем - сервису аккаунтинга будет достаточно события создания
+	/*
+		_, err = eventProducerBE.ProduceEventData(eventmodel.TASK_BE_TASK_ASSIGNED, task.Uuid, reflect.TypeOf(*task).String(), eventData, "2", []string{"1"})
+		if err != nil {
+			log.Fatal(err)
+		}
+	*/
 }
 
 // Обработка запроса пакетного переназначения пользователей у открытых задач

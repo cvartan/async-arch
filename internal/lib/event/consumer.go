@@ -19,12 +19,13 @@ type EventHandleFunc func(e *Event, data interface{})
 
 // Обработчик событий
 type EventConsumer struct {
-	manager       msg.MessageManager
-	repository    repo.DomainRepositoryManager
-	validator     *schema.SchemaValidator
-	queueName     string
-	events        map[model.EventType]EventHandleFunc
-	eventVersions map[model.EventType]string
+	manager           msg.MessageManager
+	repository        repo.DomainRepositoryManager
+	validator         *schema.SchemaValidator
+	queueName         string
+	events            map[model.EventType]EventHandleFunc
+	eventVersions     map[model.EventType]string
+	defaultHandleFunc EventHandleFunc
 }
 
 // Создание обработчика событий
@@ -52,8 +53,12 @@ func CreateEventConsumer(
 
 // Добавление обработчика для определенного типа события
 func (p *EventConsumer) AddConsumedEvent(eventName model.EventType, eventVersion string, handleFunc EventHandleFunc) {
-	p.events[eventName] = handleFunc
-	p.eventVersions[eventName] = eventVersion
+	if eventName != "" {
+		p.events[eventName] = handleFunc
+		p.eventVersions[eventName] = eventVersion
+	} else {
+		p.defaultHandleFunc = handleFunc
+	}
 }
 
 // Функция обработки сообщения с событием
@@ -93,21 +98,29 @@ func (p *EventConsumer) handleEvent(key, value []byte, headers map[string]interf
 		}
 	}
 	// Определяем обработчик для данного события
-	f, ok := p.events[e.EventType]
+	var f EventHandleFunc
+	var ok bool
+	f, ok = p.events[e.EventType]
 	if !ok {
-		p.saveDeadLetter(key, value, headers, errors.New("incompatible event"))
-		return
+		if p.defaultHandleFunc != nil {
+			f = p.defaultHandleFunc
+		} else {
+			p.saveDeadLetter(key, value, headers, errors.New("incompatible event"))
+			return
+		}
 	}
 
-	// Выполняем валидацию события
-	version := p.eventVersions[e.EventType]
+	if ok {
+		// Выполняем валидацию события если не используется функция по умолчанию
+		version := p.eventVersions[e.EventType]
 
-	body := string(value)
-	err := p.validator.Validate(string(e.EventType), version, body)
-	if err != nil && p.repository != nil {
-		// Сохраняем сообщение в таблицу "мертвых сообщений"
-		p.saveDeadLetter(key, value, headers, err)
-		return
+		body := string(value)
+		err := p.validator.Validate(string(e.EventType), version, body)
+		if err != nil && p.repository != nil {
+			// Сохраняем сообщение в таблицу "мертвых сообщений"
+			p.saveDeadLetter(key, value, headers, err)
+			return
+		}
 	}
 
 	// Запускаем обработку события

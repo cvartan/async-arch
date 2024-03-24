@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	eventConsumerCUD *event.EventConsumer
+	eventConsumerCUD, eventConsumerBE *event.EventConsumer
 )
 
 func main() {
@@ -42,6 +42,7 @@ func main() {
 
 	repo, _ := base.App.GetDomainRepository("analisys")
 	eventConsumerCUD = event.CreateEventConsumer(manager, repo, "analisys-streaming")
+	eventConsumerBE = event.CreateEventConsumer(manager, repo, "analysis-bussiness-events")
 
 	initEventHandlers()
 
