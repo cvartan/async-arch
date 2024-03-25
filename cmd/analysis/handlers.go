@@ -1,7 +1,7 @@
 package main
 
 import (
-	model "async-arch/internal/domain/analisys"
+	model "async-arch/internal/domain/analysis"
 	authmodel "async-arch/internal/domain/auth"
 	"async-arch/internal/lib/auth"
 	"async-arch/internal/lib/base"

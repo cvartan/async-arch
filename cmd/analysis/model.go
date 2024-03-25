@@ -1,7 +1,7 @@
 package main
 
 import (
-	model "async-arch/internal/domain/analisys"
+	model "async-arch/internal/domain/analysis"
 	"async-arch/internal/lib/base"
 	repo "async-arch/internal/lib/base/repository/gorm"
 	"async-arch/internal/lib/sysenv"

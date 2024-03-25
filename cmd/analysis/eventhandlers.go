@@ -1,7 +1,7 @@
 package main
 
 import (
-	model "async-arch/internal/domain/analisys"
+	model "async-arch/internal/domain/analysis"
 	eventmodel "async-arch/internal/domain/event"
 	"async-arch/internal/lib/base"
 	events "async-arch/internal/lib/event"
