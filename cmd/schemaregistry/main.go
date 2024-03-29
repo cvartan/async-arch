@@ -2,11 +2,11 @@ package main
 
 import (
 	"async-arch/internal/lib/base"
-	"async-arch/internal/lib/sysenv"
+	ou "async-arch/internal/lib/osutils"
 	"log"
 )
 
-var schemaRepositoryPath string = sysenv.GetEnvValue(
+var schemaRepositoryPath string = ou.GetEnvValue(
 	"JSON_SCHEMA_REPO+PATH",
 	"D:/Projects/async-arch/api/event",
 )

@@ -5,7 +5,7 @@ import (
 	msg "async-arch/internal/lib/base/messages"
 	repo "async-arch/internal/lib/base/repository"
 	"async-arch/internal/lib/schema"
-	"async-arch/internal/lib/stringtool"
+	strutils "async-arch/internal/lib/strutils"
 	"errors"
 
 	"encoding/base64"
@@ -142,7 +142,7 @@ func (p *EventConsumer) saveDeadLetter(key, value []byte, headers map[string]int
 	deadEventSource.Source = base64.StdEncoding.EncodeToString(value)
 
 	var deadEventJson string
-	err1 := json.NewEncoder(stringtool.CreateStringWriter(&deadEventJson)).Encode(deadEventSource)
+	err1 := json.NewEncoder(strutils.CreateStringWriter(&deadEventJson)).Encode(deadEventSource)
 	if err1 != nil {
 		log.Println(err1)
 		return

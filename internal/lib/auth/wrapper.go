@@ -3,7 +3,7 @@ package auth
 import (
 	model "async-arch/internal/domain/auth"
 	"async-arch/internal/lib/httptool"
-	"async-arch/internal/lib/sysenv"
+	ou "async-arch/internal/lib/osutils"
 	"fmt"
 	"log"
 	"net/http"
@@ -69,6 +69,6 @@ func WithAuth(handler http.HandlerFunc, roles []model.UserRole) http.HandlerFunc
 
 var (
 	checker         *JwtTokenChecker
-	authServiceAddr string = sysenv.GetEnvValue("AUTH_SERVER", "localhost") // Адрес сервера авторизации
-	authServicePort string = sysenv.GetEnvValue("AUTH_SERVER_PORT", "8090") // Порт сервера авторизации
+	authServiceAddr string = ou.GetEnvValue("AUTH_SERVER", "localhost") // Адрес сервера авторизации
+	authServicePort string = ou.GetEnvValue("AUTH_SERVER_PORT", "8090") // Порт сервера авторизации
 )

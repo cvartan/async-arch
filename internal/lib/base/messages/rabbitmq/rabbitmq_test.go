@@ -2,7 +2,7 @@ package rabbitmq_test
 
 import (
 	mq "async-arch/internal/lib/base/messages/rabbitmq"
-	"async-arch/internal/lib/sysenv"
+	ou "async-arch/internal/lib/osutils"
 	"testing"
 )
 
@@ -17,8 +17,8 @@ func CatchMessage(key, value []byte, headers map[string]interface{}) {
 func TestRabbitMQ(t *testing.T) {
 	result = make(chan string)
 
-	serverAddr := sysenv.GetEnvValue("RABBITMQ_SERVER", "localhost")
-	vhostName := sysenv.GetEnvValue("RABBITMQ_VHOST", "async_arch")
+	serverAddr := ou.GetEnvValue("RABBITMQ_SERVER", "localhost")
+	vhostName := ou.GetEnvValue("RABBITMQ_VHOST", "async_arch")
 
 	manager, err := mq.CreateRabbitMQManager("test", "asyncarch", "password", serverAddr, vhostName, mq.DEFAULT_PORT)
 	if err != nil {

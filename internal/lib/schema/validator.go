@@ -1,7 +1,7 @@
 package schema
 
 import (
-	"async-arch/internal/lib/sysenv"
+	ou "async-arch/internal/lib/osutils"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -29,8 +29,8 @@ func CreateSchemaValidator() *SchemaValidator {
 		schemaService: &http.Client{},
 		schemaServiceAddr: fmt.Sprintf(
 			"%s://%s",
-			sysenv.GetEnvValue("SCHEMA_SERVICE_METHOD", "http"),
-			sysenv.GetEnvValue("SCHEMA_SERVICE_ADDR", "localhost:8094"),
+			ou.GetEnvValue("SCHEMA_SERVICE_METHOD", "http"),
+			ou.GetEnvValue("SCHEMA_SERVICE_ADDR", "localhost:8094"),
 		),
 		schemaCache: make(map[EventSchemaKey]*jsonschema.Schema),
 	}

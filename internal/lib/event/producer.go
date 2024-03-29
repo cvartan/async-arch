@@ -5,7 +5,7 @@ import (
 	msg "async-arch/internal/lib/base/messages"
 	repo "async-arch/internal/lib/base/repository"
 	"async-arch/internal/lib/schema"
-	str "async-arch/internal/lib/stringtool"
+	strutils "async-arch/internal/lib/strutils"
 
 	"encoding/json"
 	"log"
@@ -84,7 +84,7 @@ func (p *EventProducer) ProduceEventData(
 	}
 
 	var dataJson string
-	err := json.NewEncoder(str.CreateStringWriter(&dataJson)).Encode(data)
+	err := json.NewEncoder(strutils.CreateStringWriter(&dataJson)).Encode(data)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (p *EventProducer) ProduceEventData(
 		func() {
 			var eventSourceText string
 
-			err := json.NewEncoder(str.CreateStringWriter(&eventSourceText)).Encode(data)
+			err := json.NewEncoder(strutils.CreateStringWriter(&eventSourceText)).Encode(data)
 
 			if err != nil {
 				log.Println(err)

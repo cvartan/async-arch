@@ -4,7 +4,7 @@ import (
 	"async-arch/internal/lib/base"
 	rabbitmq "async-arch/internal/lib/base/messages/rabbitmq"
 	"async-arch/internal/lib/event"
-	sysenv "async-arch/internal/lib/sysenv"
+	ou "async-arch/internal/lib/osutils"
 	"log"
 )
 
@@ -23,8 +23,8 @@ func main() {
 	// Инициализируем обработчики запросов http
 	initHandlers()
 	// Инициализируем менеджер очередей и продюсер для событий
-	server := sysenv.GetEnvValue("RABBITMQ_SERVER", "192.168.1.99")
-	vhostName := sysenv.GetEnvValue("RABBITMQ_VHOST", "async_arch")
+	server := ou.GetEnvValue("RABBITMQ_SERVER", "192.168.1.99")
+	vhostName := ou.GetEnvValue("RABBITMQ_VHOST", "async_arch")
 	user := "asyncarch"
 	password := "password"
 	manager, err := rabbitmq.CreateRabbitMQManager(

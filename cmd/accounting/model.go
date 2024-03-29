@@ -4,14 +4,14 @@ import (
 	model "async-arch/internal/domain/accounting"
 	"async-arch/internal/lib/base"
 	repo "async-arch/internal/lib/base/repository/gorm"
-	"async-arch/internal/lib/sysenv"
+	ou "async-arch/internal/lib/osutils"
 	"log"
 )
 
 // Инициализация модели данных сервиса аккаунтинга
 func initModel() {
 
-	host := sysenv.GetEnvValue("AUTHSRV_DBHOST", "192.168.1.99")
+	host := ou.GetEnvValue("AUTHSRV_DBHOST", "192.168.1.99")
 	dbname := "async-arch"
 	user := "async-arch"
 	password := "password"
