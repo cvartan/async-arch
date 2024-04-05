@@ -2,7 +2,7 @@ package auth
 
 import (
 	model "async-arch/internal/domain/auth"
-	"async-arch/internal/lib/httptool"
+	"async-arch/internal/lib/httphelper"
 	ou "async-arch/internal/lib/osutils"
 	"fmt"
 	"log"
@@ -22,7 +22,7 @@ func WithAuth(handler http.HandlerFunc, roles []model.UserRole) http.HandlerFunc
 		// Получаем строку с токеном
 		tokentCookie, err := r.Cookie("token")
 		if err != nil {
-			httptool.SetStatus401(w, "Token is not present")
+			httphelper.SetStatus401(w, "Token is not present")
 			return
 		}
 		tokenStr := tokentCookie.Value
@@ -36,7 +36,7 @@ func WithAuth(handler http.HandlerFunc, roles []model.UserRole) http.HandlerFunc
 
 		checkInfo, err := checker.Check(tokenStr)
 		if err != nil {
-			httptool.SetStatus401(w, err.Error())
+			httphelper.SetStatus401(w, err.Error())
 			return
 		}
 
@@ -52,7 +52,7 @@ func WithAuth(handler http.HandlerFunc, roles []model.UserRole) http.HandlerFunc
 					return false
 				}(roles, checkInfo.UserRole)
 				if !ok {
-					httptool.SetStatus401(w, "Unautorized user role for this method")
+					httphelper.SetStatus401(w, "Unautorized user role for this method")
 					return
 				}
 			}

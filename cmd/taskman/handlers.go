@@ -8,7 +8,7 @@ import (
 	model "async-arch/internal/domain/taskman"
 	authtool "async-arch/internal/lib/auth"
 	base "async-arch/internal/lib/base"
-	httptool "async-arch/internal/lib/httptool"
+	"async-arch/internal/lib/httphelper"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -42,14 +42,14 @@ func handleCreateTask(w http.ResponseWriter, r *http.Request) {
 	var taskRq CreateTaskRequest
 	err := json.NewDecoder(r.Body).Decode(&taskRq)
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httphelper.SetStatus500(w, err)
 		return
 	}
 
 	// Делаем проверку, что в заголовке задачи нет указания на JiraId - то есть остутствуют символы []
 
 	if strings.Contains(taskRq.Title, "[") && strings.Contains(taskRq.Title, "]") {
-		httptool.SetStatus500(w, errors.New("jiraId is not allowed in task title"))
+		httphelper.SetStatus500(w, errors.New("jiraId is not allowed in task title"))
 		return
 	}
 
@@ -65,7 +65,7 @@ func handleCreateTask(w http.ResponseWriter, r *http.Request) {
 	randomUser := CreateUserRandomizer()
 	newUser := randomUser.Uuid()
 	if newUser == "" {
-		httptool.SetStatus500(w, errors.New("нет пользователей для назначения задаче"))
+		httphelper.SetStatus500(w, errors.New("нет пользователей для назначения задаче"))
 		return
 	}
 	task.AssignedUserUuid = newUser
@@ -74,7 +74,7 @@ func handleCreateTask(w http.ResponseWriter, r *http.Request) {
 	repo, _ := base.App.GetDomainRepository("task")
 	err = repo.Append(task)
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httphelper.SetStatus500(w, err)
 		return
 	}
 
@@ -91,7 +91,7 @@ func handleCreateTask(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewEncoder(w).Encode(taskResp)
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httphelper.SetStatus500(w, err)
 		return
 	}
 
@@ -139,7 +139,7 @@ func handleReassignTask(w http.ResponseWriter, r *http.Request) {
 	// Получаем список пользователей для назначения
 	randomizer := CreateUserRandomizer()
 	if randomizer.Len() == 0 {
-		httptool.SetStatus500(w, errors.New("нет пользователей для назначения"))
+		httphelper.SetStatus500(w, errors.New("нет пользователей для назначения"))
 		return
 	}
 
@@ -226,7 +226,7 @@ func handleCompleteTask(w http.ResponseWriter, r *http.Request) {
 	task := &model.Task{}
 	err := repo.Get(task, map[string]interface{}{"id": taskID, "state": "ACTIVE"})
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httphelper.SetStatus500(w, err)
 		return
 	}
 
@@ -236,7 +236,7 @@ func handleCompleteTask(w http.ResponseWriter, r *http.Request) {
 
 	// Проверяем, что пользовтаель закрывает совю задачу
 	if task.AssignedUserUuid != userUuid {
-		httptool.SetStatus401(w, "Task assigned to another user")
+		httphelper.SetStatus401(w, "Task assigned to another user")
 		return
 	}
 
@@ -258,7 +258,7 @@ func handleCompleteTask(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewEncoder(w).Encode(taskResp)
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httphelper.SetStatus500(w, err)
 		return
 	}
 
@@ -294,7 +294,7 @@ func handleGetUserTasks(w http.ResponseWriter, r *http.Request) {
 	repo, _ := base.App.GetDomainRepository("task")
 	result, err := repo.RawQuery("select id,uuid,description,assigned_user_uuid,state from task.task where state='ACTIVE' and assigned_user_uuid =?", r.Header.Get("X-Auth-User-UUID"))
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httphelper.SetStatus500(w, err)
 		return
 	}
 	rows := result.(*sql.Rows)
@@ -320,6 +320,6 @@ func handleGetUserTasks(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewEncoder(w).Encode(&tasks)
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httphelper.SetStatus500(w, err)
 	}
 }

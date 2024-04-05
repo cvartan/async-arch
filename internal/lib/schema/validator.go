@@ -1,7 +1,7 @@
 package schema
 
 import (
-	ou "async-arch/internal/lib/osutils"
+	ou "async-arch/internal/lib/oshelper"
 	"encoding/json"
 	"errors"
 	"fmt"

@@ -1,4 +1,4 @@
-package sysenv
+package oshelper
 
 import "os"
 
