@@ -1,4 +1,4 @@
-package strhelper
+package strutils
 
 type StringWriter struct {
 	source *string

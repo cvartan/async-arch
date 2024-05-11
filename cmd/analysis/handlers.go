@@ -5,7 +5,7 @@ import (
 	authmodel "async-arch/internal/domain/auth"
 	"async-arch/internal/lib/auth"
 	"async-arch/internal/lib/base"
-	"async-arch/internal/lib/httptool"
+	"async-arch/internal/lib/httputils"
 	"database/sql"
 	"encoding/json"
 	"log"
@@ -38,7 +38,7 @@ func handleGetUserStatRequest(w http.ResponseWriter, r *http.Request) {
 
 	result, err := repo.RawQuery(getUserListQueryTemplate)
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httputils.SetStatus500(w, err)
 		return
 	}
 
@@ -64,7 +64,7 @@ func handleGetUserStatRequest(w http.ResponseWriter, r *http.Request) {
 
 		var debSum, valSum int
 		if err != nil {
-			httptool.SetStatus500(w, err)
+			httputils.SetStatus500(w, err)
 			return
 		}
 		rows := result.(*sql.Rows)
@@ -99,7 +99,7 @@ func handleGetUserStatRequest(w http.ResponseWriter, r *http.Request) {
 
 	result, err = repo.RawQuery(GetManagementFeeQueryTemplate)
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httputils.SetStatus500(w, err)
 		return
 	}
 	rows = result.(*sql.Rows)
@@ -128,7 +128,7 @@ func handleGetUserStatRequest(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httputils.SetStatus500(w, err)
 	}
 }
 
@@ -153,7 +153,7 @@ func handleGetTaskStatRequest(w http.ResponseWriter, r *http.Request) {
 		var err error
 		dateFrom, err = time.Parse(time.DateOnly, dateFromQueryValue)
 		if err != nil {
-			httptool.SetStatus500(w, err)
+			httputils.SetStatus500(w, err)
 			return
 		}
 	}
@@ -163,7 +163,7 @@ func handleGetTaskStatRequest(w http.ResponseWriter, r *http.Request) {
 		var err error
 		dateTo, err = time.Parse(time.DateOnly, dateToQueryValue)
 		if err != nil {
-			httptool.SetStatus500(w, err)
+			httputils.SetStatus500(w, err)
 			return
 		}
 		dateTo = dateTo.Add(time.Hour * 24)
@@ -172,7 +172,7 @@ func handleGetTaskStatRequest(w http.ResponseWriter, r *http.Request) {
 	repo, _ := base.App.GetDomainRepository("analysis")
 	result, err := repo.RawQuery(MaxPriceByDaysQueryTemplate, dateFrom, dateTo)
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httputils.SetStatus500(w, err)
 	}
 
 	rows := result.(*sql.Rows)
@@ -194,7 +194,7 @@ func handleGetTaskStatRequest(w http.ResponseWriter, r *http.Request) {
 
 	result, err = repo.RawQuery(MaxPriceByPeriodQueryTemplate, dateFrom, dateTo)
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httputils.SetStatus500(w, err)
 	}
 
 	rows = result.(*sql.Rows)

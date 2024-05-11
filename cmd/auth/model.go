@@ -6,7 +6,7 @@ import (
 	model "async-arch/internal/domain/auth"
 	"async-arch/internal/lib/base"
 	repo "async-arch/internal/lib/base/repository/gorm"
-	ou "async-arch/internal/lib/oshelper
+	ou "async-arch/internal/lib/osutils"
 	"log"
 )
 

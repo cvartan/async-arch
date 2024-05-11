@@ -1,4 +1,4 @@
-package oshelper
+package osutils
 
 import "os"
 

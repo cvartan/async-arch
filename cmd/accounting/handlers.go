@@ -4,7 +4,7 @@ import (
 	authmodel "async-arch/internal/domain/auth"
 	auth "async-arch/internal/lib/auth"
 	base "async-arch/internal/lib/base"
-	"async-arch/internal/lib/httptool"
+	"async-arch/internal/lib/httputils"
 	"database/sql"
 	"encoding/json"
 	"log"
@@ -39,7 +39,7 @@ func handleGetLog(w http.ResponseWriter, r *http.Request) {
 	result, err := repo.RawQuery(getBalanceQueryTemplate, userUuid)
 
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httputils.SetStatus500(w, err)
 		return
 	}
 
@@ -59,7 +59,7 @@ func handleGetLog(w http.ResponseWriter, r *http.Request) {
 
 	result, err = repo.RawQuery(getLogQueryTemplate, userUuid)
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httputils.SetStatus500(w, err)
 	}
 
 	rows, ok = result.(*sql.Rows)
@@ -86,7 +86,7 @@ func handleGetLog(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httputils.SetStatus500(w, err)
 		return
 	}
 
@@ -104,7 +104,7 @@ func handleGetStat(w http.ResponseWriter, h *http.Request) {
 
 	result, err := repo.RawQuery(getStatQueryTemplate)
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httputils.SetStatus500(w, err)
 		return
 	}
 

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"async-arch/internal/lib/httptool"
+	"async-arch/internal/lib/httputils"
 	"errors"
 	"fmt"
 	"net/http"
@@ -20,14 +20,14 @@ func handleGetSchema(w http.ResponseWriter, r *http.Request) {
 		EventVersion: eventVersion,
 	}]
 	if !ok {
-		httptool.SetStatus500(w, errors.New("schema is not found"))
+		httputils.SetStatus500(w, errors.New("schema is not found"))
 		return
 	}
 
 	schemaFile := fmt.Sprintf("%s/%s", schemaRepositoryPath, path)
 	source, err := os.ReadFile(schemaFile)
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httputils.SetStatus500(w, err)
 		return
 	}
 	w.Write(source)

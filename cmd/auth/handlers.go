@@ -6,7 +6,7 @@ import (
 	model "async-arch/internal/domain/auth"
 	eventmodel "async-arch/internal/domain/event"
 	"async-arch/internal/lib/base"
-	"async-arch/internal/lib/httptool"
+	"async-arch/internal/lib/httputils"
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
@@ -49,7 +49,7 @@ func handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	// Получаем тело запроса добавления пользователя
 	var userRq CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&userRq); err != nil {
-		httptool.SetStatus500(w, err)
+		httputils.SetStatus500(w, err)
 		return
 	}
 
@@ -68,7 +68,7 @@ func handleCreateUser(w http.ResponseWriter, r *http.Request) {
 
 	err := repo.Append(user)
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httputils.SetStatus500(w, err)
 		return
 	}
 
@@ -83,7 +83,7 @@ func handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewEncoder(w).Encode(userResp); err != nil {
-		httptool.SetStatus500(w, err)
+		httputils.SetStatus500(w, err)
 		return
 	}
 
@@ -112,15 +112,15 @@ func handleAuthentificate(
 	// Получаем уникальный оттиск ключа в качестве логина и пароль
 	beak, password, ok := r.BasicAuth()
 	if !ok {
-		httptool.SetStatus401(w, "Expected basic authorization")
+		httputils.SetStatus401(w, "Expected basic authorization")
 		return
 	}
 	if beak == "" {
-		httptool.SetStatus401(w, "Empty parrot beak profile")
+		httputils.SetStatus401(w, "Empty parrot beak profile")
 		return
 	}
 	if password == "" {
-		httptool.SetStatus401(w, "Empty password")
+		httputils.SetStatus401(w, "Empty password")
 		return
 	}
 
@@ -129,7 +129,7 @@ func handleAuthentificate(
 	repo, _ := base.App.GetDomainRepository("auth")
 	err := repo.Get(&user, map[string]interface{}{"beak": beak})
 	if err != nil {
-		httptool.SetStatus401(w, "Unregistered user")
+		httputils.SetStatus401(w, "Unregistered user")
 		return
 	}
 
@@ -140,7 +140,7 @@ func handleAuthentificate(
 
 	// Проверяем пароль
 	if password != user.Password {
-		httptool.SetStatus401(w, "Incorrect password")
+		httputils.SetStatus401(w, "Incorrect password")
 		return
 	}
 
@@ -164,7 +164,7 @@ func handleAuthentificate(
 	// Подписываем токен (используем алгоритм RSA)
 	tokenStr, err := token.SignedString(authPrivateKey)
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httputils.SetStatus500(w, err)
 		return
 	}
 
@@ -198,7 +198,7 @@ func handleGetKey(w http.ResponseWriter, r *http.Request) {
 func handleCheck(w http.ResponseWriter, r *http.Request) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httputils.SetStatus500(w, err)
 		return
 	}
 	tokenStr := string(b)
@@ -208,12 +208,12 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 	token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) { return &authPrivateKey.PublicKey, nil })
 
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httputils.SetStatus500(w, err)
 		return
 	}
 
 	if !token.Valid {
-		httptool.SetStatus401(w, "Invalid token")
+		httputils.SetStatus401(w, "Invalid token")
 		return
 	}
 
@@ -224,6 +224,6 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
-		httptool.SetStatus500(w, err)
+		httputils.SetStatus500(w, err)
 	}
 }

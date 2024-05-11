@@ -1,4 +1,4 @@
-package httphelper
+package httputils
 
 import "net/http"
 
