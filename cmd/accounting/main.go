@@ -14,7 +14,7 @@ var (
 )
 
 func main() {
-	// Запускаем http-сервер на порту 8091
+	// Запускаем http-сервер на порту 8092
 	if err := base.App.InitHTTPServer("", 8092); err != nil {
 		log.Fatalln(err)
 	}
